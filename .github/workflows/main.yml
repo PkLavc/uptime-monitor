@@ -12,20 +12,35 @@ jobs:
       pull-requests: write
     steps:
       - uses: actions/checkout@v4
+      
       - name: Run Check
         run: python monitor.py
+        
       - name: Auto PR and Merge
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
+          # Configura identidade
           git config user.name "PkLavc"
           git config user.email "patrickajm@gmail.com"
           
-          BRANCH="status-update-${{ github.run_id }}"
+          # Cria nome de branch único com timestamp para evitar conflitos
+          BRANCH="status-$(date +%s)"
+          
+          # Cria e muda para a branch
           git checkout -b $BRANCH
+          
+          # Adiciona o log, commita e sobe com force
           git add uptime_log.txt
           git commit -m "chore: update uptime status"
-          git push origin $BRANCH
+          git push origin $BRANCH --force
           
-          PR_URL=$(gh pr create --title "Uptime Check: $(date +'%Y-%m-%d')" --body "Automated check" --base main --head $BRANCH)
+          # Cria o Pull Request
+          PR_URL=$(gh pr create \
+            --title "Uptime Check: $(date +'%Y-%m-%d %H:%M')" \
+            --body "Automated uptime check for pklavc.github.io" \
+            --base main \
+            --head $BRANCH)
+          
+          # Faz o Merge automático
           gh pr merge $PR_URL --merge --admin
