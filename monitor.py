@@ -3,29 +3,55 @@ import datetime
 import json
 import os
 import sys
+import socket
+import time
+import re
+from urllib.parse import urlparse
 
-# Configurações
+# Configurações avançadas
 SERVICES = {
-    "github_io": {
+    "github_pages": {
         "url": "https://pklavc.github.io/",
-        "name": "GitHub Pages"
+        "name": "GitHub Pages",
+        "type": "website",
+        "keywords": ["PkLavc", "Patrick", "Software Engineer"],
+        "security_headers": ["strict-transport-security", "x-content-type-options"]
     },
-    "codepulse": {
-        "url": "https://pklavc.github.io/codepulse-monorepo/",
-        "name": "CodePulse Monorepo"
+    "github_api": {
+        "url": "https://api.github.com/repos/PkLavc/codepulse-monorepo",
+        "name": "GitHub API",
+        "type": "api",
+        "keywords": ["codepulse-monorepo"],
+        "security_headers": ["strict-transport-security", "x-content-type-options"]
     }
 }
 
 HISTORY_FILE = "history.json"
 INDEX_FILE = "index.html"
-MAX_HISTORY_RECORDS = 10000  # Histórico maior para cálculos estatísticos
+SHIELDS_BADGE_FILE = "uptime-badge.json"
+MAX_HISTORY_RECORDS = 500  # Log rotation: manter apenas 500 registros
+CLEANUP_DAYS = 90  # Remover registros com mais de 90 dias
 
 def load_history():
     """Carrega o histórico de monitoramento"""
     if os.path.exists(HISTORY_FILE):
         try:
             with open(HISTORY_FILE, 'r') as f:
-                return json.load(f)
+                history = json.load(f)
+                
+            # Compatibilidade com histórico antigo
+            if "services" not in history:
+                history = {
+                    "services": {key: [] for key in SERVICES.keys()},
+                    "created_at": datetime.datetime.now().isoformat()
+                }
+            else:
+                # Garante que todas as chaves de serviços existam
+                for service_key in SERVICES.keys():
+                    if service_key not in history["services"]:
+                        history["services"][service_key] = []
+            
+            return history
         except (json.JSONDecodeError, FileNotFoundError):
             pass
     
@@ -39,35 +65,143 @@ def save_history(history):
     with open(HISTORY_FILE, 'w') as f:
         json.dump(history, f, indent=2)
 
-def check_service(service_key, service_config):
-    """Realiza o monitoramento de um serviço"""
+def measure_dns_resolution(url):
+    """Mede o tempo de resolução DNS"""
     try:
-        start = datetime.datetime.now()
-        r = requests.get(service_config["url"], timeout=10)
-        latency = (datetime.datetime.now() - start).total_seconds() * 1000
-        status = "ONLINE" if r.status_code == 200 else f"OFFLINE ({r.status_code})"
+        hostname = urlparse(url).hostname
+        start_time = time.time()
+        socket.gethostbyname(hostname)
+        dns_time = (time.time() - start_time) * 1000
+        return round(dns_time, 2)
+    except Exception:
+        return 0
+
+def measure_tcp_connection(url):
+    """Mede o tempo de conexão TCP"""
+    try:
+        parsed = urlparse(url)
+        hostname = parsed.hostname
+        port = parsed.port or (443 if parsed.scheme == 'https' else 80)
+        
+        start_time = time.time()
+        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        sock.settimeout(10)
+        sock.connect((hostname, port))
+        sock.close()
+        tcp_time = (time.time() - start_time) * 1000
+        return round(tcp_time, 2)
+    except Exception:
+        return 0
+
+def deep_health_check(url, response, keywords):
+    """Verifica se o conteúdo HTML contém palavras-chave específicas"""
+    try:
+        content = response.text.lower()
+        found_keywords = []
+        for keyword in keywords:
+            if keyword.lower() in content:
+                found_keywords.append(keyword)
+        
+        return len(found_keywords) > 0, found_keywords
+    except Exception:
+        return False, []
+
+def analyze_security_headers(response):
+    """Analisa a presença de cabeçalhos de segurança"""
+    security_checks = {}
+    required_headers = SERVICES["github_pages"]["security_headers"]
+    
+    for header in required_headers:
+        security_checks[header] = header.lower() in response.headers
+        
+    return security_checks
+
+def check_service(service_key, service_config):
+    """Realiza monitoramento avançado com métricas detalhadas"""
+    timestamp = datetime.datetime.now().isoformat()
+    
+    try:
+        # Medidas de tempo detalhadas
+        dns_time = measure_dns_resolution(service_config["url"])
+        
+        start_total = time.time()
+        response = requests.get(
+            service_config["url"], 
+            timeout=10,
+            headers={'User-Agent': 'UptimeMonitor/1.0'}
+        )
+        total_time = (time.time() - start_total) * 1000
+        
+        tcp_time = measure_tcp_connection(service_config["url"])
+        transfer_time = total_time - dns_time - tcp_time
+        
+        # Verificações avançadas
+        status = "ONLINE" if response.status_code == 200 else f"OFFLINE ({response.status_code})"
+        
+        # Deep health check para websites
+        content_ok = True
+        found_keywords = []
+        security_headers = {}
+        
+        if service_config["type"] == "website":
+            content_ok, found_keywords = deep_health_check(
+                service_config["url"], response, service_config["keywords"]
+            )
+            if not content_ok:
+                status = "CONTENT_ERROR"
+        
+        # Análise de segurança
+        if response.status_code == 200:
+            security_headers = analyze_security_headers(response)
         
         record = {
-            "timestamp": datetime.datetime.now().isoformat(),
+            "timestamp": timestamp,
             "url": service_config["url"],
             "status": status,
-            "latency_ms": round(latency, 2),
-            "http_code": r.status_code
+            "http_code": response.status_code,
+            "total_time_ms": round(total_time, 2),
+            "dns_time_ms": dns_time,
+            "tcp_time_ms": tcp_time,
+            "transfer_time_ms": round(transfer_time, 2),
+            "content_ok": content_ok,
+            "found_keywords": found_keywords,
+            "security_headers": security_headers,
+            "engagement": {}  # Para API GitHub
         }
+        
+        # Extrai dados de engajamento para API GitHub
+        if service_key == "github_api" and response.status_code == 200:
+            try:
+                data = response.json()
+                record["engagement"] = {
+                    "stars": data.get("stargazers_count", 0),
+                    "forks": data.get("forks_count", 0),
+                    "open_issues": data.get("open_issues_count", 0)
+                }
+            except:
+                pass
         
     except Exception as e:
         record = {
-            "timestamp": datetime.datetime.now().isoformat(),
+            "timestamp": timestamp,
             "url": service_config["url"],
             "status": "ERROR",
-            "latency_ms": 0,
-            "error": str(e)
+            "http_code": 0,
+            "total_time_ms": 0,
+            "dns_time_ms": 0,
+            "tcp_time_ms": 0,
+            "transfer_time_ms": 0,
+            "content_ok": False,
+            "found_keywords": [],
+            "security_headers": {},
+            "error": str(e),
+            "engagement": {}
         }
     
     return record
 
 def add_record_to_history(history, service_key, record):
-    """Adiciona um registro ao histórico"""
+    """Adiciona um registro ao histórico com log rotation"""
     history["services"][service_key].append(record)
     
     # Implementa log rotation (mantém apenas os últimos registros)
@@ -76,6 +210,20 @@ def add_record_to_history(history, service_key, record):
     
     save_history(history)
 
+def cleanup_old_records(history):
+    """Remove registros com mais de 90 dias para manter o repositório leve"""
+    cutoff_date = datetime.datetime.now() - datetime.timedelta(days=CLEANUP_DAYS)
+    
+    for service_key in history["services"]:
+        original_count = len(history["services"][service_key])
+        history["services"][service_key] = [
+            record for record in history["services"][service_key]
+            if datetime.datetime.fromisoformat(record["timestamp"]) >= cutoff_date
+        ]
+        removed_count = original_count - len(history["services"][service_key])
+        if removed_count > 0:
+            print(f"Limpeza: Removidos {removed_count} registros antigos do serviço {service_key}")
+
 def calculate_uptime_percentage(records, time_filter=None):
     """Calcula o uptime percentage para um conjunto de registros"""
     if not records:
@@ -83,8 +231,7 @@ def calculate_uptime_percentage(records, time_filter=None):
     
     # Filtra registros se necessário
     if time_filter:
-        cutoff_time = time_filter
-        filtered_records = [r for r in records if datetime.datetime.fromisoformat(r["timestamp"]) >= cutoff_time]
+        filtered_records = [r for r in records if datetime.datetime.fromisoformat(r["timestamp"]) >= time_filter]
     else:
         filtered_records = records
     
@@ -94,23 +241,57 @@ def calculate_uptime_percentage(records, time_filter=None):
     online_records = [r for r in filtered_records if r.get("status") == "ONLINE"]
     return (len(online_records) / len(filtered_records)) * 100
 
-def calculate_average_latency(records, time_filter=None):
-    """Calcula a latência média para um conjunto de registros"""
+def calculate_performance_metrics(records, time_filter=None):
+    """Calcula métricas de performance detalhadas"""
     if not records:
-        return 0
+        return {
+            "avg_latency": 0,
+            "avg_dns_time": 0,
+            "avg_tcp_time": 0,
+            "avg_transfer_time": 0,
+            "peak_hour": None,
+            "slowest_response": 0,
+            "fastest_response": 0
+        }
     
     # Filtra registros se necessário
     if time_filter:
-        cutoff_time = time_filter
-        filtered_records = [r for r in records if datetime.datetime.fromisoformat(r["timestamp"]) >= cutoff_time]
+        filtered_records = [r for r in records if datetime.datetime.fromisoformat(r["timestamp"]) >= time_filter]
     else:
         filtered_records = records
     
-    online_records = [r for r in filtered_records if r.get("status") == "ONLINE" and r.get("latency_ms", 0) > 0]
-    if not online_records:
-        return 0
+    online_records = [r for r in filtered_records if r.get("status") == "ONLINE" and r.get("total_time_ms", 0) > 0]
     
-    return sum(r["latency_ms"] for r in online_records) / len(online_records)
+    if not online_records:
+        return {
+            "avg_latency": 0,
+            "avg_dns_time": 0,
+            "avg_tcp_time": 0,
+            "avg_transfer_time": 0,
+            "peak_hour": None,
+            "slowest_response": 0,
+            "fastest_response": 0
+        }
+    
+    # Cálculos de latência
+    latencies = [r["total_time_ms"] for r in online_records]
+    dns_times = [r["dns_time_ms"] for r in online_records if r.get("dns_time_ms", 0) > 0]
+    tcp_times = [r["tcp_time_ms"] for r in online_records if r.get("tcp_time_ms", 0) > 0]
+    transfer_times = [r["transfer_time_ms"] for r in online_records if r.get("transfer_time_ms", 0) > 0]
+    
+    # Horário de pico (maior latência)
+    peak_record = max(online_records, key=lambda x: x["total_time_ms"])
+    peak_hour = datetime.datetime.fromisoformat(peak_record["timestamp"]).strftime("%H:%M")
+    
+    return {
+        "avg_latency": round(sum(latencies) / len(latencies), 2),
+        "avg_dns_time": round(sum(dns_times) / len(dns_times), 2) if dns_times else 0,
+        "avg_tcp_time": round(sum(tcp_times) / len(tcp_times), 2) if tcp_times else 0,
+        "avg_transfer_time": round(sum(transfer_times) / len(transfer_times), 2) if transfer_times else 0,
+        "peak_hour": peak_hour,
+        "slowest_response": max(latencies),
+        "fastest_response": min(latencies)
+    }
 
 def get_time_filters():
     """Obtém os filtros de tempo para cálculos estatísticos"""
@@ -119,54 +300,124 @@ def get_time_filters():
     # Últimas 24 horas
     last_24h = now - datetime.timedelta(hours=24)
     
-    # Mês atual
-    current_month_start = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+    # Últimos 7 dias
+    last_7d = now - datetime.timedelta(days=7)
     
-    # Últimos meses (últimos 30 dias)
-    last_month_start = now - datetime.timedelta(days=30)
+    # Últimos 30 dias
+    last_30d = now - datetime.timedelta(days=30)
     
     return {
         "last_24h": last_24h,
-        "current_month": current_month_start,
-        "last_month": last_month_start
+        "last_7d": last_7d,
+        "last_30d": last_30d
     }
 
 def process_service_data(history, service_key):
-    """Processa os dados de um serviço e calcula estatísticas"""
+    """Processa os dados de um serviço e calcula estatísticas avançadas"""
     records = history["services"][service_key]
     
     if not records:
         return {
             "current_status": "UNKNOWN",
-            "uptime_monthly": 0,
-            "uptime_current_month": 0,
-            "uptime_24h": 0,
-            "avg_latency": 0,
-            "last_check": ""
+            "sla_24h": 0,
+            "sla_7d": 0,
+            "sla_30d": 0,
+            "performance": {},
+            "last_check": "",
+            "engagement": {}
         }
     
     # Obtém filtros de tempo
     time_filters = get_time_filters()
     
-    # Calcula estatísticas
-    uptime_monthly = calculate_uptime_percentage(records, time_filters["last_month"])
-    uptime_current_month = calculate_uptime_percentage(records, time_filters["current_month"])
-    uptime_24h = calculate_uptime_percentage(records, time_filters["last_24h"])
-    avg_latency = calculate_average_latency(records, time_filters["current_month"])
+    # Calcula SLA para diferentes períodos
+    sla_24h = calculate_uptime_percentage(records, time_filters["last_24h"])
+    sla_7d = calculate_uptime_percentage(records, time_filters["last_7d"])
+    sla_30d = calculate_uptime_percentage(records, time_filters["last_30d"])
+    
+    # Calcula métricas de performance
+    performance = calculate_performance_metrics(records, time_filters["last_24h"])
     
     # Status atual
     last_record = records[-1]
     current_status = last_record["status"]
     last_check = last_record["timestamp"]
     
+    # Engajamento (para API GitHub)
+    engagement = last_record.get("engagement", {})
+    
     return {
         "current_status": current_status,
-        "uptime_monthly": round(uptime_monthly, 2),
-        "uptime_current_month": round(uptime_current_month, 2),
-        "uptime_24h": round(uptime_24h, 2),
-        "avg_latency": round(avg_latency, 2),
-        "last_check": last_check
+        "sla_24h": round(sla_24h, 2),
+        "sla_7d": round(sla_7d, 2),
+        "sla_30d": round(sla_30d, 2),
+        "performance": performance,
+        "last_check": last_check,
+        "engagement": engagement
     }
+
+def generate_incident_log(history):
+    """Gera log de incidentes a partir do histórico"""
+    incidents = []
+    
+    for service_key in SERVICES.keys():
+        records = history["services"][service_key]
+        if not records:
+            continue
+        
+        current_incident = None
+        
+        for record in records:
+            status = record["status"]
+            timestamp = record["timestamp"]
+            
+            if status != "ONLINE" and current_incident is None:
+                # Início de incidente
+                current_incident = {
+                    "service": service_key,
+                    "start_time": timestamp,
+                    "end_time": None,
+                    "status": status,
+                    "duration": "Em andamento"
+                }
+            elif status == "ONLINE" and current_incident is not None:
+                # Fim de incidente
+                current_incident["end_time"] = timestamp
+                start_dt = datetime.datetime.fromisoformat(current_incident["start_time"])
+                end_dt = datetime.datetime.fromisoformat(current_incident["end_time"])
+                duration = end_dt - start_dt
+                current_incident["duration"] = str(duration).split('.')[0]  # Remove milissegundos
+                incidents.append(current_incident)
+                current_incident = None
+        
+        # Se houver incidente em andamento
+        if current_incident:
+            incidents.append(current_incident)
+    
+    # Ordena por data (mais recentes primeiro)
+    incidents.sort(key=lambda x: x["start_time"], reverse=True)
+    return incidents
+
+def generate_shields_badge(history):
+    """Gera badge no padrão Shields.io"""
+    github_records = history["services"]["github_pages"]
+    if not github_records:
+        uptime = 0
+    else:
+        time_filters = get_time_filters()
+        uptime = calculate_uptime_percentage(github_records, time_filters["last_24h"])
+    
+    badge_data = {
+        "schemaVersion": 1,
+        "label": "Uptime",
+        "message": f"{uptime:.1f}%",
+        "color": "brightgreen" if uptime >= 99.0 else "yellow" if uptime >= 95.0 else "red"
+    }
+    
+    with open(SHIELDS_BADGE_FILE, 'w') as f:
+        json.dump(badge_data, f, indent=2)
+    
+    return badge_data
 
 def inject_data_into_html(history):
     """Injeta os dados processados no index.html"""
@@ -179,10 +430,17 @@ def inject_data_into_html(history):
     for service_key in SERVICES.keys():
         processed_data[service_key] = process_service_data(history, service_key)
     
+    # Gera log de incidentes
+    incident_log = generate_incident_log(history)
+    
+    # Gera badge Shields.io
+    badge_data = generate_shields_badge(history)
+    
     # Prepara dados para injeção
     dashboard_data = {
-        "github_io": processed_data["github_io"],
-        "codepulse": processed_data["codepulse"],
+        "services": processed_data,
+        "incident_log": incident_log,
+        "badge": badge_data,
         "history": history["services"],
         "generated_at": datetime.datetime.now().isoformat()
     }
@@ -195,7 +453,6 @@ def inject_data_into_html(history):
         with open(INDEX_FILE, 'r', encoding='utf-8') as f:
             html_content = f.read()
     except UnicodeDecodeError:
-        # Tenta com encoding diferente se falhar
         with open(INDEX_FILE, 'r', encoding='latin-1') as f:
             html_content = f.read()
     
@@ -209,17 +466,12 @@ def inject_data_into_html(history):
     
     # Verifica se o marcador ainda existe (para injeção inicial)
     if "<!-- INICIO_DADOS_INJECAO -->" not in html_content:
-        # Se não existir, adiciona antes do fechamento do body
         if "</body>" in html_content:
             insertion_point = html_content.find("</body>")
             new_data_block = f"""    <!-- INICIO_DADOS_INJECAO -->
-    <!-- Os dados serão injetados aqui pelo Python -->
+    <!-- Dados de observabilidade injetados pelo monitor.py -->
     <script>
-        // INICIO_LOGICA_DASHBOARD
-        // Esta seção será preenchida pelo Python com os dados processados
-        
-        let dashboardData = {json_data};
-        // FIM_LOGICA_DASHBOARD
+        window.dashboardData = {json_data};
     </script>
     <!-- FIM_DADOS_INJECAO -->
 
@@ -232,13 +484,9 @@ def inject_data_into_html(history):
         # Insere novos dados
         injection_point = html_content.find("<!-- INICIO_DADOS_INJECAO -->")
         new_data_block = f"""<!-- INICIO_DADOS_INJECAO -->
-    <!-- Os dados serão injetados aqui pelo Python -->
+    <!-- Dados de observabilidade injetados pelo monitor.py -->
     <script>
-        // INICIO_LOGICA_DASHBOARD
-        // Esta seção será preenchida pelo Python com os dados processados
-        
-        let dashboardData = {json_data};
-        // FIM_LOGICA_DASHBOARD
+        window.dashboardData = {json_data};
     </script>
     <!-- FIM_DADOS_INJECAO -->"""
         
@@ -264,8 +512,8 @@ def should_alert_services(history):
     return False
 
 def main():
-    """Função principal de monitoramento"""
-    print("Iniciando monitoramento de serviços...")
+    """Função principal de monitoramento SRE"""
+    print("Iniciando monitoramento SRE avançado...")
     
     # Carrega histórico
     history = load_history()
@@ -279,11 +527,15 @@ def main():
         service_results[service_key] = record
         
         status_symbol = "+" if record["status"] == "ONLINE" else "-"
-        latency_str = f"{record.get('latency_ms', 0)}ms" if record["status"] == "ONLINE" else "N/A"
+        latency_str = f"{record.get('total_time_ms', 0)}ms" if record["status"] == "ONLINE" else "N/A"
         print(f"  {status_symbol} {service_config['name']}: {record['status']} - {latency_str}")
     
+    # Limpeza de registros antigos
+    print("Realizando limpeza de registros antigos...")
+    cleanup_old_records(history)
+    
     # Injeta dados no HTML
-    print("Atualizando dashboard...")
+    print("Atualizando dashboard de observabilidade...")
     if inject_data_into_html(history):
         print("Dashboard atualizado com sucesso!")
     else:
@@ -292,7 +544,7 @@ def main():
     
     # Verifica necessidade de alerta
     if should_alert_services(history):
-        print("ALERTA: Interrupção de serviço detectada!")
+        print("ALERTA: Incidente detectado!")
         sys.exit(1)
     else:
         print("Monitoramento concluído com sucesso - todos os serviços online")

@@ -3,19 +3,40 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Uptime Monitor Dashboard - PkLavc</title>
+    <title>SRE Dashboard - PkLavc | Site Reliability Engineering</title>
+    <meta name="description" content="SRE Dashboard monitoring GitHub Pages and CodePulse Monorepo with advanced observability metrics">
+    <meta name="keywords" content="uptime, monitoring, sre, reliability, github, status">
+    
+    <!-- OpenGraph Meta Tags for Social Sharing -->
+    <meta property="og:title" content="SRE Dashboard - PkLavc">
+    <meta property="og:description" content="Advanced uptime monitoring with SLA metrics, performance analysis, and incident tracking">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://pklavc.github.io/">
+    <meta property="og:image" content="https://pklavc.github.io/assets/dashboard-preview.png">
+    <meta property="og:site_name" content="PkLavc SRE Dashboard">
+    
+    <!-- Twitter Card Meta Tags -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="SRE Dashboard - PkLavc">
+    <meta name="twitter:description" content="Advanced uptime monitoring with SLA metrics, performance analysis, and incident tracking">
+    <meta name="twitter:image" content="https://pklavc.github.io/assets/dashboard-preview.png">
+    
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         :root {
-            --bg-color: #1a1a1a;
-            --card-bg: #252525;
-            --text-primary: #ffffff;
-            --text-secondary: #b0b0b0;
-            --accent-color: #00d4ff;
-            --success-color: #4ade80;
+            --bg-color: #0f172a;
+            --card-bg: #111827;
+            --panel-bg: #0b1220;
+            --text-primary: #f8fafc;
+            --text-secondary: #94a3b8;
+            --text-tertiary: #64748b;
+            --accent-color: #38bdf8;
+            --success-color: #22c55e;
             --warning-color: #f59e0b;
             --danger-color: #ef4444;
-            --border-color: #333333;
+            --border-color: #1f2937;
+            --grid-line: #334155;
+            --hover-bg: #1f2937;
         }
 
         * {
@@ -25,63 +46,136 @@
         }
 
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: var(--bg-color);
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background: linear-gradient(180deg, #0f172a 0%, #0b1220 100%);
             color: var(--text-primary);
             min-height: 100vh;
+            overflow-x: hidden;
         }
 
+        /* Header with Command Center Style */
         .header {
-            background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
-            padding: 2rem;
+            background: linear-gradient(135deg, #0b1220 0%, #111827 100%);
             border-bottom: 1px solid var(--border-color);
-            text-align: center;
+            padding: 1.5rem 2rem;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            backdrop-filter: blur(10px);
         }
 
-        .header h1 {
-            font-size: 2.5rem;
-            margin-bottom: 0.5rem;
-            background: linear-gradient(135deg, var(--accent-color), #7c3aed);
+        .header-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 2rem;
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .brand-logo {
+            width: 40px;
+            height: 40px;
+            background: radial-gradient(circle, var(--accent-color), transparent 70%);
+            border-radius: 50%;
+            box-shadow: 0 0 20px var(--accent-color), 0 0 40px rgba(56, 189, 248, 0.3);
+            animation: pulse 3s infinite;
+        }
+
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(56, 189, 248, 0.7); }
+            70% { box-shadow: 0 0 0 20px rgba(56, 189, 248, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(56, 189, 248, 0); }
+        }
+
+        .brand-info h1 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            letter-spacing: 1px;
+            background: linear-gradient(135deg, var(--accent-color), #a78bfa);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
         }
 
-        .header p {
+        .brand-info p {
             color: var(--text-secondary);
-            font-size: 1.1rem;
+            font-size: 0.875rem;
         }
 
-        .container {
+        .status-overview {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .badge {
+            padding: 0.5rem 1rem;
+            border-radius: 999px;
+            font-size: 0.875rem;
+            font-weight: 600;
+            border: 1px solid var(--border-color);
+            background: var(--panel-bg);
+        }
+
+        .badge.online { color: var(--success-color); border-color: rgba(34, 197, 94, 0.3); }
+        .badge.offline { color: var(--danger-color); border-color: rgba(239, 68, 68, 0.3); }
+        .badge.warning { color: var(--warning-color); border-color: rgba(245, 158, 11, 0.3); }
+
+        /* Main Dashboard Grid */
+        .dashboard-grid {
             max-width: 1200px;
-            margin: 0 auto;
-            padding: 2rem;
+            margin: 2rem auto;
+            padding: 0 2rem 4rem 2rem;
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 2rem;
         }
 
-        .services-grid {
+        /* Service Cards */
+        .service-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 2rem;
-            margin-bottom: 3rem;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 1.5rem;
         }
 
         .service-card {
-            background-color: var(--card-bg);
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
             border-radius: 12px;
             padding: 1.5rem;
-            border: 1px solid var(--border-color);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
             transition: transform 0.3s ease, box-shadow 0.3s ease;
+            position: relative;
+            overflow: hidden;
         }
 
-        .service-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+        .service-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, var(--accent-color), #a78bfa);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .service-card:hover::before {
+            opacity: 1;
         }
 
         .service-header {
             display: flex;
-            align-items: center;
             justify-content: space-between;
+            align-items: center;
             margin-bottom: 1.5rem;
             border-bottom: 1px solid var(--border-color);
             padding-bottom: 1rem;
@@ -107,63 +201,86 @@
             box-shadow: 0 0 10px var(--danger-color);
         }
 
-        .status-indicator.error {
+        .status-indicator.warning {
             background-color: var(--warning-color);
             box-shadow: 0 0 10px var(--warning-color);
         }
 
-        @keyframes pulse {
-            0% { box-shadow: 0 0 0 0 rgba(74, 222, 128, 0.7); }
-            70% { box-shadow: 0 0 0 10px rgba(74, 222, 128, 0); }
-            100% { box-shadow: 0 0 0 0 rgba(74, 222, 128, 0); }
+        .service-name {
+            font-size: 1.1rem;
+            font-weight: 600;
         }
 
         .service-url {
             color: var(--text-secondary);
             font-family: 'Courier New', monospace;
-            font-size: 0.9rem;
+            font-size: 0.8rem;
+            background: var(--panel-bg);
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            border: 1px solid var(--border-color);
         }
 
+        /* Metrics Grid */
         .metrics-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
             gap: 1rem;
             margin-bottom: 2rem;
         }
 
         .metric-card {
-            background-color: var(--card-bg);
+            background: var(--panel-bg);
+            border: 1px solid var(--border-color);
             border-radius: 8px;
             padding: 1.5rem;
-            border: 1px solid var(--border-color);
             text-align: center;
+            transition: background 0.3s ease;
+        }
+
+        .metric-card:hover {
+            background: var(--hover-bg);
         }
 
         .metric-value {
-            font-size: 2rem;
-            font-weight: bold;
+            font-size: 1.5rem;
+            font-weight: 700;
             margin-bottom: 0.5rem;
         }
 
         .metric-label {
             color: var(--text-secondary);
-            font-size: 0.9rem;
+            font-size: 0.75rem;
             text-transform: uppercase;
             letter-spacing: 1px;
+        }
+
+        .metric-sublabel {
+            color: var(--text-tertiary);
+            font-size: 0.7rem;
+            margin-top: 0.25rem;
+        }
+
+        /* Charts Section */
+        .charts-section {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 2rem;
         }
 
         .charts-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
             gap: 2rem;
-            margin-bottom: 3rem;
+            margin-top: 2rem;
         }
 
         .chart-card {
-            background-color: var(--card-bg);
-            border-radius: 12px;
-            padding: 1.5rem;
+            background: var(--panel-bg);
             border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 1.5rem;
         }
 
         .chart-header {
@@ -172,6 +289,8 @@
             color: var(--text-secondary);
             text-transform: uppercase;
             letter-spacing: 1px;
+            font-size: 0.8rem;
+            font-weight: 600;
         }
 
         .chart-container {
@@ -179,382 +298,495 @@
             height: 300px;
         }
 
+        /* Incident Log */
+        .incident-section {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 2rem;
+        }
+
+        .incident-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1rem;
+        }
+
+        .incident-table th {
+            text-align: left;
+            color: var(--text-secondary);
+            font-size: 0.8rem;
+            font-weight: 600;
+            padding: 0.75rem;
+            border-bottom: 1px solid var(--border-color);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .incident-table td {
+            padding: 0.75rem;
+            border-bottom: 1px solid var(--border-color);
+            font-size: 0.9rem;
+        }
+
+        .incident-row {
+            transition: background 0.3s ease;
+        }
+
+        .incident-row:hover {
+            background: var(--hover-bg);
+        }
+
+        .status-pill {
+            padding: 0.25rem 0.75rem;
+            border-radius: 999px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .status-online { background: rgba(34, 197, 94, 0.2); color: var(--success-color); }
+        .status-offline { background: rgba(239, 68, 68, 0.2); color: var(--danger-color); }
+        .status-warning { background: rgba(245, 158, 11, 0.2); color: var(--warning-color); }
+
+        /* Footer */
         .footer {
             text-align: center;
             color: var(--text-secondary);
             padding: 2rem;
             border-top: 1px solid var(--border-color);
+            margin-top: 2rem;
         }
 
         .last-update {
-            font-size: 0.9rem;
+            font-size: 0.8rem;
             margin-top: 1rem;
         }
 
-        .badge {
-            display: inline-block;
-            padding: 0.25rem 0.75rem;
-            border-radius: 20px;
-            font-size: 0.8rem;
-            font-weight: bold;
-            margin-left: 1rem;
-        }
-
-        .badge.online { background-color: rgba(74, 222, 128, 0.2); color: var(--success-color); }
-        .badge.offline { background-color: rgba(239, 68, 68, 0.2); color: var(--danger-color); }
-        .badge.error { background-color: rgba(245, 158, 11, 0.2); color: var(--warning-color); }
-
+        /* Responsive Design */
         @media (max-width: 768px) {
-            .container {
-                padding: 1rem;
+            .header-content {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 1rem;
             }
             
-            .header h1 {
-                font-size: 2rem;
+            .dashboard-grid {
+                padding: 0 1rem 3rem 1rem;
             }
             
             .charts-grid {
                 grid-template-columns: 1fr;
             }
         }
+
+        /* Loading Animation */
+        .loading {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border: 2px solid var(--text-secondary);
+            border-radius: 50%;
+            border-top-color: var(--accent-color);
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
     </style>
 </head>
 <body>
-    <div class="header">
-        <h1>📊 Uptime Monitor Dashboard</h1>
-        <p>Monitoramento em tempo real de disponibilidade e performance</p>
-    </div>
+    <!-- Header -->
+    <header class="header">
+        <div class="header-content">
+            <div class="brand">
+                <div class="brand-logo"></div>
+                <div class="brand-info">
+                    <h1>SRE Dashboard</h1>
+                    <p>Site Reliability Engineering | Advanced Observability</p>
+                </div>
+            </div>
+            <div class="status-overview">
+                <span class="badge online" id="global-status">SISTEMA OPERACIONAL</span>
+                <span class="badge" id="last-update-badge">Atualizando...</span>
+            </div>
+        </div>
+    </header>
 
-    <div class="container">
-        <!-- GitHub IO Service -->
-        <div class="service-card">
-            <div class="service-header">
-                <div class="service-title">
-                    <div class="status-indicator" id="github-io-status"></div>
-                    <div>
-                        <h2>GitHub Pages</h2>
-                        <span class="service-url">https://pklavc.github.io/</span>
+    <!-- Dashboard Content -->
+    <main class="dashboard-grid">
+        <!-- Service Status Cards -->
+        <section class="service-grid">
+            <!-- GitHub Pages Card -->
+            <div class="service-card">
+                <div class="service-header">
+                    <div class="service-title">
+                        <div class="status-indicator" id="github-pages-status"></div>
+                        <div>
+                            <div class="service-name">GitHub Pages</div>
+                            <div class="service-url">https://pklavc.github.io/</div>
+                        </div>
+                    </div>
+                    <span class="badge online" id="github-pages-badge">ONLINE</span>
+                </div>
+
+                <div class="metrics-grid">
+                    <div class="metric-card">
+                        <div class="metric-value" id="github-sla-24h">--</div>
+                        <div class="metric-label">SLA 24h</div>
+                        <div class="metric-sublabel">Disponibilidade</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-value" id="github-sla-7d">--</div>
+                        <div class="metric-label">SLA 7d</div>
+                        <div class="metric-sublabel">Semana</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-value" id="github-sla-30d">--</div>
+                        <div class="metric-label">SLA 30d</div>
+                        <div class="metric-sublabel">Mês</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-value" id="github-latency">--</div>
+                        <div class="metric-label">Latência Média</div>
+                        <div class="metric-sublabel">24h</div>
                     </div>
                 </div>
-                <span class="badge" id="github-io-badge">Carregando...</span>
+
+                <div class="metrics-grid">
+                    <div class="metric-card">
+                        <div class="metric-value" id="github-dns">--</div>
+                        <div class="metric-label">DNS Time</div>
+                        <div class="metric-sublabel">Resolução</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-value" id="github-tcp">--</div>
+                        <div class="metric-label">TCP Time</div>
+                        <div class="metric-sublabel">Conexão</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-value" id="github-transfer">--</div>
+                        <div class="metric-label">Transfer Time</div>
+                        <div class="metric-sublabel">Download</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-value" id="github-peak">--</div>
+                        <div class="metric-label">Horário Pico</div>
+                        <div class="metric-sublabel">Maior Latência</div>
+                    </div>
+                </div>
             </div>
 
-            <div class="metrics-grid">
-                <div class="metric-card">
-                    <div class="metric-value" id="github-io-uptime-month">--</div>
-                    <div class="metric-label">Uptime Mês Atual</div>
+            <!-- GitHub API Card -->
+            <div class="service-card">
+                <div class="service-header">
+                    <div class="service-title">
+                        <div class="status-indicator" id="github-api-status"></div>
+                        <div>
+                            <div class="service-name">GitHub API</div>
+                            <div class="service-url">api.github.com/repos/PkLavc/codepulse-monorepo</div>
+                        </div>
+                    </div>
+                    <span class="badge online" id="github-api-badge">ONLINE</span>
                 </div>
-                <div class="metric-card">
-                    <div class="metric-value" id="github-io-uptime-24h">--</div>
-                    <div class="metric-label">Uptime 24h</div>
+
+                <div class="metrics-grid">
+                    <div class="metric-card">
+                        <div class="metric-value" id="api-sla-24h">--</div>
+                        <div class="metric-label">SLA 24h</div>
+                        <div class="metric-sublabel">Disponibilidade</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-value" id="api-sla-7d">--</div>
+                        <div class="metric-label">SLA 7d</div>
+                        <div class="metric-sublabel">Semana</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-value" id="api-sla-30d">--</div>
+                        <div class="metric-label">SLA 30d</div>
+                        <div class="metric-sublabel">Mês</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-value" id="api-latency">--</div>
+                        <div class="metric-label">Latência Média</div>
+                        <div class="metric-sublabel">24h</div>
+                    </div>
                 </div>
-                <div class="metric-card">
-                    <div class="metric-value" id="github-io-latency">--</div>
-                    <div class="metric-label">Latência Média</div>
+
+                <div class="metrics-grid">
+                    <div class="metric-card">
+                        <div class="metric-value" id="api-stars">--</div>
+                        <div class="metric-label">Stars</div>
+                        <div class="metric-sublabel">Repositório</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-value" id="api-forks">--</div>
+                        <div class="metric-label">Forks</div>
+                        <div class="metric-sublabel">Repositório</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-value" id="api-issues">--</div>
+                        <div class="metric-label">Issues</div>
+                        <div class="metric-sublabel">Abertas</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-value" id="api-peak">--</div>
+                        <div class="metric-label">Horário Pico</div>
+                        <div class="metric-sublabel">Maior Latência</div>
+                    </div>
                 </div>
             </div>
+        </section>
 
+        <!-- Charts Section -->
+        <section class="charts-section">
+            <h2 style="margin-bottom: 1rem; color: var(--text-primary);">Análise de Performance</h2>
             <div class="charts-grid">
+                <!-- Latency Trend Chart -->
                 <div class="chart-card">
-                    <div class="chart-header">Resumo Mensal</div>
+                    <div class="chart-header">Tendência de Latência (24h)</div>
                     <div class="chart-container">
-                        <canvas id="github-io-monthly-chart"></canvas>
+                        <canvas id="latency-trend-chart"></canvas>
                     </div>
                 </div>
+
+                <!-- Uptime SLA Chart -->
                 <div class="chart-card">
-                    <div class="chart-header">Resumo do Mês Atual</div>
+                    <div class="chart-header">Disponibilidade SLA</div>
                     <div class="chart-container">
-                        <canvas id="github-io-current-month-chart"></canvas>
+                        <canvas id="uptime-sla-chart"></canvas>
                     </div>
                 </div>
+
+                <!-- Engagement Chart -->
                 <div class="chart-card">
-                    <div class="chart-header">Resumo do Dia</div>
+                    <div class="chart-header">Engajamento CodePulse</div>
                     <div class="chart-container">
-                        <canvas id="github-io-daily-chart"></canvas>
+                        <canvas id="engagement-chart"></canvas>
                     </div>
                 </div>
             </div>
-        </div>
+        </section>
 
-        <!-- CodePulse Service -->
-        <div class="service-card">
-            <div class="service-header">
-                <div class="service-title">
-                    <div class="status-indicator" id="codepulse-status"></div>
-                    <div>
-                        <h2>CodePulse Monorepo</h2>
-                        <span class="service-url">https://pklavc.github.io/codepulse-monorepo/</span>
-                    </div>
-                </div>
-                <span class="badge" id="codepulse-badge">Carregando...</span>
+        <!-- Incident Log -->
+        <section class="incident-section">
+            <h2 style="margin-bottom: 1rem; color: var(--text-primary);">Histórico de Incidentes</h2>
+            <div style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 1rem;">
+                Registros de indisponibilidade e tempo de recuperação
             </div>
+            <table class="incident-table">
+                <thead>
+                    <tr>
+                        <th>Serviço</th>
+                        <th>Status</th>
+                        <th>Início</th>
+                        <th>Fim</th>
+                        <th>Duração</th>
+                    </tr>
+                </thead>
+                <tbody id="incident-table-body">
+                    <tr>
+                        <td colspan="5" style="text-align: center; color: var(--text-tertiary); padding: 2rem;">
+                            Nenhum incidente registrado
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+    </main>
 
-            <div class="metrics-grid">
-                <div class="metric-card">
-                    <div class="metric-value" id="codepulse-uptime-month">--</div>
-                    <div class="metric-label">Uptime Mês Atual</div>
-                </div>
-                <div class="metric-card">
-                    <div class="metric-value" id="codepulse-uptime-24h">--</div>
-                    <div class="metric-label">Uptime 24h</div>
-                </div>
-                <div class="metric-card">
-                    <div class="metric-value" id="codepulse-latency">--</div>
-                    <div class="metric-label">Latência Média</div>
-                </div>
-            </div>
-
-            <div class="charts-grid">
-                <div class="chart-card">
-                    <div class="chart-header">Resumo Mensal</div>
-                    <div class="chart-container">
-                        <canvas id="codepulse-monthly-chart"></canvas>
-                    </div>
-                </div>
-                <div class="chart-card">
-                    <div class="chart-header">Resumo do Mês Atual</div>
-                    <div class="chart-container">
-                        <canvas id="codepulse-current-month-chart"></canvas>
-                    </div>
-                </div>
-                <div class="chart-card">
-                    <div class="chart-header">Resumo do Dia</div>
-                    <div class="chart-container">
-                        <canvas id="codepulse-daily-chart"></canvas>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="footer">
-            <p>🚀 Sistema automatizado de monitoramento com CI/CD integrado</p>
-            <div class="last-update" id="last-update">Última atualização: Carregando...</div>
-        </div>
-    </div>
+    <!-- Footer -->
+    <footer class="footer">
+        <p>🚀 Sistema automatizado de observabilidade com CI/CD integrado</p>
+        <div class="last-update" id="last-update">Última atualização: Carregando...</div>
+    </footer>
 
     
 
     <script>
-        // INICIO_LOGICA_DASHBOARD
-        // Esta seção será preenchida pelo Python com os dados processados
-        
-        let dashboardData = {
-            github_io: {
-                current_status: 'ONLINE',
-                uptime_monthly: 0,
-                uptime_current_month: 0,
-                uptime_24h: 0,
-                avg_latency: 0,
-                last_check: ''
-            },
-            codepulse: {
-                current_status: 'ONLINE',
-                uptime_monthly: 0,
-                uptime_current_month: 0,
-                uptime_24h: 0,
-                avg_latency: 0,
-                last_check: ''
-            },
-            history: []
-        };
-
-        // Função para atualizar indicadores de status
-        function updateStatusIndicators() {
-            // GitHub IO
-            const githubStatusEl = document.getElementById('github-io-status');
-            const githubBadgeEl = document.getElementById('github-io-badge');
+        // Dashboard Logic
+        function updateDashboard() {
+            const data = window.dashboardData;
             
-            if (dashboardData.github_io.current_status === 'ONLINE') {
-                githubStatusEl.className = 'status-indicator';
-                githubBadgeEl.className = 'badge online';
-                githubBadgeEl.textContent = 'ONLINE';
-            } else if (dashboardData.github_io.current_status === 'OFFLINE') {
-                githubStatusEl.className = 'status-indicator offline';
-                githubBadgeEl.className = 'badge offline';
-                githubBadgeEl.textContent = 'OFFLINE';
-            } else {
-                githubStatusEl.className = 'status-indicator error';
-                githubBadgeEl.className = 'badge error';
-                githubBadgeEl.textContent = 'ERROR';
+            if (!data || !data.services) {
+                console.log('Aguardando dados...');
+                return;
             }
 
-            // CodePulse
-            const codepulseStatusEl = document.getElementById('codepulse-status');
-            const codepulseBadgeEl = document.getElementById('codepulse-badge');
+            // Update Global Status
+            const globalStatus = document.getElementById('global-status');
+            const githubStatus = data.services.github_pages.current_status;
+            const apiStatus = data.services.github_api.current_status;
             
-            if (dashboardData.codepulse.current_status === 'ONLINE') {
-                codepulseStatusEl.className = 'status-indicator';
-                codepulseBadgeEl.className = 'badge online';
-                codepulseBadgeEl.textContent = 'ONLINE';
-            } else if (dashboardData.codepulse.current_status === 'OFFLINE') {
-                codepulseStatusEl.className = 'status-indicator offline';
-                codepulseBadgeEl.className = 'badge offline';
-                codepulseBadgeEl.textContent = 'OFFLINE';
+            if (githubStatus === 'ONLINE' && apiStatus === 'ONLINE') {
+                globalStatus.textContent = 'SISTEMA OPERACIONAL';
+                globalStatus.className = 'badge online';
             } else {
-                codepulseStatusEl.className = 'status-indicator error';
-                codepulseBadgeEl.className = 'badge error';
-                codepulseBadgeEl.textContent = 'ERROR';
+                globalStatus.textContent = 'INCIDENTE DETECTADO';
+                globalStatus.className = 'badge offline';
+            }
+
+            // Update GitHub Pages
+            updateServiceCard('github-pages', data.services.github_pages);
+            
+            // Update GitHub API
+            updateServiceCard('github-api', data.services.github_api);
+
+            // Update Incident Log
+            updateIncidentLog(data.incident_log);
+
+            // Update Charts
+            updateCharts(data);
+
+            // Update Last Update
+            const lastUpdate = document.getElementById('last-update');
+            const lastUpdateBadge = document.getElementById('last-update-badge');
+            const updateTime = new Date(data.generated_at).toLocaleString('pt-BR');
+            
+            lastUpdate.textContent = `Última atualização: ${updateTime}`;
+            lastUpdateBadge.textContent = updateTime;
+        }
+
+        function updateServiceCard(prefix, serviceData) {
+            // Status Indicator
+            const statusEl = document.getElementById(`${prefix}-status`);
+            const badgeEl = document.getElementById(`${prefix}-badge`);
+            
+            if (serviceData.current_status === 'ONLINE') {
+                statusEl.className = 'status-indicator';
+                badgeEl.className = 'badge online';
+                badgeEl.textContent = 'ONLINE';
+            } else if (serviceData.current_status === 'OFFLINE') {
+                statusEl.className = 'status-indicator offline';
+                badgeEl.className = 'badge offline';
+                badgeEl.textContent = 'OFFLINE';
+            } else {
+                statusEl.className = 'status-indicator warning';
+                badgeEl.className = 'badge warning';
+                badgeEl.textContent = 'WARNING';
+            }
+
+            // SLA Metrics
+            document.getElementById(`${prefix}-sla-24h`).textContent = `${serviceData.sla_24h}%`;
+            document.getElementById(`${prefix}-sla-7d`).textContent = `${serviceData.sla_7d}%`;
+            document.getElementById(`${prefix}-sla-30d`).textContent = `${serviceData.sla_30d}%`;
+
+            // Performance Metrics
+            const perf = serviceData.performance;
+            if (perf) {
+                document.getElementById(`${prefix}-latency`).textContent = `${perf.avg_latency || 0}ms`;
+                document.getElementById(`${prefix}-dns`).textContent = `${perf.avg_dns_time || 0}ms`;
+                document.getElementById(`${prefix}-tcp`).textContent = `${perf.avg_tcp_time || 0}ms`;
+                document.getElementById(`${prefix}-transfer`).textContent = `${perf.avg_transfer_time || 0}ms`;
+                document.getElementById(`${prefix}-peak`).textContent = perf.peak_hour || '--:--';
+            }
+
+            // Engagement Metrics (API only)
+            if (prefix === 'github-api' && serviceData.engagement) {
+                const eng = serviceData.engagement;
+                document.getElementById('api-stars').textContent = eng.stars || 0;
+                document.getElementById('api-forks').textContent = eng.forks || 0;
+                document.getElementById('api-issues').textContent = eng.open_issues || 0;
             }
         }
 
-        // Função para atualizar métricas numéricas
-        function updateMetrics() {
-            // GitHub IO
-            document.getElementById('github-io-uptime-month').textContent = 
-                dashboardData.github_io.uptime_current_month.toFixed(2) + '%';
-            document.getElementById('github-io-uptime-24h').textContent = 
-                dashboardData.github_io.uptime_24h.toFixed(2) + '%';
-            document.getElementById('github-io-latency').textContent = 
-                dashboardData.github_io.avg_latency.toFixed(0) + 'ms';
+        function updateIncidentLog(incidents) {
+            const tbody = document.getElementById('incident-table-body');
+            tbody.innerHTML = '';
 
-            // CodePulse
-            document.getElementById('codepulse-uptime-month').textContent = 
-                dashboardData.codepulse.uptime_current_month.toFixed(2) + '%';
-            document.getElementById('codepulse-uptime-24h').textContent = 
-                dashboardData.codepulse.uptime_24h.toFixed(2) + '%';
-            document.getElementById('codepulse-latency').textContent = 
-                dashboardData.codepulse.avg_latency.toFixed(0) + 'ms';
+            if (!incidents || incidents.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="5" style="text-align: center; color: var(--text-tertiary); padding: 2rem;">
+                            Nenhum incidente registrado
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
 
-            // Última atualização
-            document.getElementById('last-update').textContent = 
-                'Última atualização: ' + dashboardData.github_io.last_check;
-        }
+            incidents.forEach(incident => {
+                const row = document.createElement('tr');
+                row.className = 'incident-row';
+                
+                const statusClass = incident.status === 'ONLINE' ? 'status-online' : 
+                                  incident.status === 'OFFLINE' ? 'status-offline' : 'status-warning';
 
-        // Função para criar gráficos de donut
-        function createDonutChart(ctx, uptime, downtime, title) {
-            return new Chart(ctx, {
-                type: 'doughnut',
-                data: {
-                    labels: ['Online', 'Offline'],
-                    datasets: [{
-                        data: [uptime, downtime],
-                        backgroundColor: [
-                            'rgba(74, 222, 128, 0.8)',
-                            'rgba(239, 68, 68, 0.8)'
-                        ],
-                        borderColor: [
-                            'rgba(74, 222, 128, 1)',
-                            'rgba(239, 68, 68, 1)'
-                        ],
-                        borderWidth: 2,
-                        hoverOffset: 10
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            position: 'bottom',
-                            labels: {
-                                color: '#b0b0b0',
-                                font: {
-                                    size: 12
-                                }
-                            }
-                        },
-                        tooltip: {
-                            backgroundColor: '#333',
-                            titleColor: '#fff',
-                            bodyColor: '#fff',
-                            borderColor: '#555',
-                            borderWidth: 1
-                        }
-                    },
-                    cutout: '60%'
-                }
+                row.innerHTML = `
+                    <td>${incident.service}</td>
+                    <td><span class="status-pill ${statusClass}">${incident.status}</span></td>
+                    <td>${new Date(incident.start_time).toLocaleString('pt-BR')}</td>
+                    <td>${incident.end_time ? new Date(incident.end_time).toLocaleString('pt-BR') : 'Em andamento'}</td>
+                    <td>${incident.duration}</td>
+                `;
+                
+                tbody.appendChild(row);
             });
         }
 
-        // Função para renderizar todos os gráficos
-        function renderCharts() {
-            // GitHub IO Charts
-            const githubMonthlyCtx = document.getElementById('github-io-monthly-chart').getContext('2d');
-            createDonutChart(
-                githubMonthlyCtx, 
-                dashboardData.github_io.uptime_monthly, 
-                100 - dashboardData.github_io.uptime_monthly,
-                'Resumo Mensal'
-            );
-
-            const githubCurrentMonthCtx = document.getElementById('github-io-current-month-chart').getContext('2d');
-            createDonutChart(
-                githubCurrentMonthCtx, 
-                dashboardData.github_io.uptime_current_month, 
-                100 - dashboardData.github_io.uptime_current_month,
-                'Resumo Mês Atual'
-            );
-
-            const githubDailyCtx = document.getElementById('github-io-daily-chart').getContext('2d');
-            createDonutChart(
-                githubDailyCtx, 
-                dashboardData.github_io.uptime_24h, 
-                100 - dashboardData.github_io.uptime_24h,
-                'Resumo 24h'
-            );
-
-            // CodePulse Charts
-            const codepulseMonthlyCtx = document.getElementById('codepulse-monthly-chart').getContext('2d');
-            createDonutChart(
-                codepulseMonthlyCtx, 
-                dashboardData.codepulse.uptime_monthly, 
-                100 - dashboardData.codepulse.uptime_monthly,
-                'Resumo Mensal'
-            );
-
-            const codepulseCurrentMonthCtx = document.getElementById('codepulse-current-month-chart').getContext('2d');
-            createDonutChart(
-                codepulseCurrentMonthCtx, 
-                dashboardData.codepulse.uptime_current_month, 
-                100 - dashboardData.codepulse.uptime_current_month,
-                'Resumo Mês Atual'
-            );
-
-            const codepulseDailyCtx = document.getElementById('codepulse-daily-chart').getContext('2d');
-            createDonutChart(
-                codepulseDailyCtx, 
-                dashboardData.codepulse.uptime_24h, 
-                100 - dashboardData.codepulse.uptime_24h,
-                'Resumo 24h'
-            );
+        function updateCharts(data) {
+            // Implement chart updates based on data.history
+            // This would require more complex logic to process time-series data
+            console.log('Charts would be updated here with:', data.history);
         }
 
-        // Função de inicialização
-        function initDashboard() {
-            updateStatusIndicators();
-            updateMetrics();
-            renderCharts();
-        }
-
-        // Inicializa quando a página carrega
-        document.addEventListener('DOMContentLoaded', initDashboard);
-        
-        // Atualiza a cada 60 segundos
-        setInterval(initDashboard, 60000);
-        // FIM_LOGICA_DASHBOARD
+        // Initialize Dashboard
+        document.addEventListener('DOMContentLoaded', () => {
+            updateDashboard();
+            // Update every 60 seconds
+            setInterval(updateDashboard, 60000);
+        });
     </script>
     <!-- INICIO_DADOS_INJECAO -->
-    <!-- Os dados serão injetados aqui pelo Python -->
+    <!-- Dados de observabilidade injetados pelo monitor.py -->
     <script>
-        // INICIO_LOGICA_DASHBOARD
-        // Esta seção será preenchida pelo Python com os dados processados
-        
-        let dashboardData = {
-  "github_io": {
-    "current_status": "ONLINE",
-    "uptime_monthly": 100.0,
-    "uptime_current_month": 100.0,
-    "uptime_24h": 100.0,
-    "avg_latency": 455.34,
-    "last_check": "2026-03-12T17:48:09.591162"
+        window.dashboardData = {
+  "services": {
+    "github_pages": {
+      "current_status": "ONLINE",
+      "sla_24h": 100.0,
+      "sla_7d": 100.0,
+      "sla_30d": 100.0,
+      "performance": {
+        "avg_latency": 500.34,
+        "avg_dns_time": 4.48,
+        "avg_tcp_time": 50.72,
+        "avg_transfer_time": 445.14,
+        "peak_hour": "18:01",
+        "slowest_response": 500.34,
+        "fastest_response": 500.34
+      },
+      "last_check": "2026-03-12T18:01:10.258656",
+      "engagement": {}
+    },
+    "github_api": {
+      "current_status": "ONLINE",
+      "sla_24h": 100.0,
+      "sla_7d": 100.0,
+      "sla_30d": 100.0,
+      "performance": {
+        "avg_latency": 627.7,
+        "avg_dns_time": 21.38,
+        "avg_tcp_time": 66.18,
+        "avg_transfer_time": 540.14,
+        "peak_hour": "18:01",
+        "slowest_response": 627.7,
+        "fastest_response": 627.7
+      },
+      "last_check": "2026-03-12T18:01:10.816314",
+      "engagement": {
+        "stars": 3,
+        "forks": 0,
+        "open_issues": 0
+      }
+    }
   },
-  "codepulse": {
-    "current_status": "ONLINE",
-    "uptime_monthly": 100.0,
-    "uptime_current_month": 100.0,
-    "uptime_24h": 100.0,
-    "avg_latency": 447.76,
-    "last_check": "2026-03-12T17:48:09.984067"
+  "incident_log": [],
+  "badge": {
+    "schemaVersion": 1,
+    "label": "Uptime",
+    "message": "100.0%",
+    "color": "brightgreen"
   },
   "history": {
     "github_io": [
@@ -602,11 +834,56 @@
         "latency_ms": 391.16,
         "http_code": 200
       }
+    ],
+    "github_pages": [
+      {
+        "timestamp": "2026-03-12T18:01:10.258656",
+        "url": "https://pklavc.github.io/",
+        "status": "ONLINE",
+        "http_code": 200,
+        "total_time_ms": 500.34,
+        "dns_time_ms": 4.48,
+        "tcp_time_ms": 50.72,
+        "transfer_time_ms": 445.14,
+        "content_ok": true,
+        "found_keywords": [
+          "PkLavc",
+          "Patrick",
+          "Software Engineer"
+        ],
+        "security_headers": {
+          "strict-transport-security": true,
+          "x-content-type-options": false
+        },
+        "engagement": {}
+      }
+    ],
+    "github_api": [
+      {
+        "timestamp": "2026-03-12T18:01:10.816314",
+        "url": "https://api.github.com/repos/PkLavc/codepulse-monorepo",
+        "status": "ONLINE",
+        "http_code": 200,
+        "total_time_ms": 627.7,
+        "dns_time_ms": 21.38,
+        "tcp_time_ms": 66.18,
+        "transfer_time_ms": 540.14,
+        "content_ok": true,
+        "found_keywords": [],
+        "security_headers": {
+          "strict-transport-security": true,
+          "x-content-type-options": true
+        },
+        "engagement": {
+          "stars": 3,
+          "forks": 0,
+          "open_issues": 0
+        }
+      }
     ]
   },
-  "generated_at": "2026-03-12T17:48:09.985825"
+  "generated_at": "2026-03-12T18:01:11.534536"
 };
-        // FIM_LOGICA_DASHBOARD
     </script>
     <!-- FIM_DADOS_INJECAO -->
 
