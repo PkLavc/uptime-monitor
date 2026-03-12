@@ -20,27 +20,19 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          # Configura identidade
           git config user.name "PkLavc"
           git config user.email "patrickajm@gmail.com"
           
-          # Cria nome de branch único com timestamp para evitar conflitos
+          # Garante branch única
           BRANCH="status-$(date +%s)"
-          
-          # Cria e muda para a branch
           git checkout -b $BRANCH
           
-          # Adiciona o log, commita e sobe com force
           git add uptime_log.txt
           git commit -m "chore: update uptime status"
+          
+          # Push garantido
           git push origin $BRANCH --force
           
-          # Cria o Pull Request
-          PR_URL=$(gh pr create \
-            --title "Uptime Check: $(date +'%Y-%m-%d %H:%M')" \
-            --body "Automated uptime check for pklavc.github.io" \
-            --base main \
-            --head $BRANCH)
-          
-          # Faz o Merge automático
-          gh pr merge $PR_URL --merge --admin
+          # Criar e fechar PR em comandos simples
+          PR_URL=$(gh pr create --title "Uptime Check $(date +'%H:%M')" --body "Automated" --base main --head $BRANCH)
+          gh pr merge "$PR_URL" --merge --admin
