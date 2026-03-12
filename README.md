@@ -1,4 +1,4 @@
-# Uptime Monitor System
+# SRE Dashboard - Uptime Monitor System
 
 ## Current Status
 
@@ -15,88 +15,105 @@
 
 ## Visão Geral
 
-Este é um sistema automatizado de monitoramento de disponibilidade (uptime) que verifica periodicamente o status de um site e registra os resultados em um repositório Git. O sistema cria automaticamente Pull Requests e realiza merges para atualizar o histórico de monitoramento.
+Este é um sistema automatizado de monitoramento de disponibilidade (uptime) que verifica periodicamente o status de serviços web e registra os resultados em um repositório Git. O sistema cria automaticamente Pull Requests e realiza merges para atualizar o histórico de monitoramento, utilizando uma abordagem GitOps para fornecer uma página de status serverless e auditável publicamente.
 
 ## Funcionamento do Sistema
 
 O sistema funciona em 4 etapas principais:
 
-1. **Monitoramento**: O script `monitor.py` faz uma requisição HTTP ao site monitorado e registra o status
-2. **Armazenamento**: Os resultados são salvos no arquivo `data/status.json` com rotação de logs (máx 100 registros)
-3. **Dashboard**: O script atualiza automaticamente a seção "Current Status" no README.md
-4. **Atualização do Repositório**: O script `workflow.sh` cria um branch, commita as alterações e realiza merge automático
+1. **Monitoramento**: O script `monitor.py` faz requisições HTTP aos serviços monitorados e registra o status, latência e métricas de performance
+2. **Armazenamento**: Os resultados são salvos no arquivo `history.json` com rotação de logs (máx 500 registros)
+3. **Dashboard**: O script atualiza automaticamente o dashboard interativo em `index.html` com gráficos em tempo real
+4. **Atualização do Repositório**: O script `workflow.sh` cria branches, commita as alterações e realiza merge automático via GitHub Actions
 
 ## Arquitetura do Sistema
 
 ```
 uptime-monitor/
 ├── monitor.py              # Script de monitoramento principal
-├── workflow.sh             # Script de automação Git
-├── data/
-│   └── status.json         # Log de monitoramento em JSON
-├── .github/
-│   └── workflows/
-│       └── uptime.yml      # Workflow do GitHub Actions
-├── README.md              # Documentação e dashboard
-└── LICENSE                # Licença do projeto
+├── workflow.sh             # Script de automação Git com variabilidade
+├── index.html              # Dashboard interativo com gráficos Chart.js
+├── assets/
+│   ├── style.css           # Estilos CSS modulares
+│   └── script.js           # Lógica JavaScript do dashboard
+├── history.json            # Histórico de monitoramento em JSON
+├── uptime-badge.json       # Badge do Shields.io
+├── data/status.json        # Dados legados (compatibilidade)
+└── README.md              # Documentação e status atual
 ```
 
-## Código Fonte Completo
+## Funcionalidades
 
-### monitor.py (Versão Atualizada)
+### Monitoramento Avançado
+- **Métricas de Performance**: DNS, TCP, Transfer times
+- **SLA Calculation**: Disponibilidade 24h, 7d, 30d
+- **Health Checks**: Verificação de conteúdo e headers de segurança
+- **Page Size Monitoring**: Auditoria de performance do codepulse-monorepo
+- **Incident Tracking**: Log automático de incidentes
 
-```python
-import requests
-import datetime
-import json
-import os
-import sys
+### Dashboard Interativo
+- **Gráficos em Tempo Real**: Uptime, latência e tamanho de página
+- **Status Cards**: Status atual e métricas por serviço
+- **Responsive Design**: Otimizado para desktop e mobile
+- **Dark Theme**: Interface moderna com tema escuro
 
-URL = "https://pklavc.github.io/"
-LOG_FILE = "data/status.json"
-MAX_RECORDS = 100
+### GitOps Automation
+- **Pull Requests Automáticas**: Commits regulares com mensagens variadas
+- **Sleep Aleatório**: Evita padrões previsíveis (1-300s)
+- **Alert System**: Commits especiais para incidentes
+- **Serverless**: 100% hospedado no GitHub Pages
 
-def load_status_data():
-    """Carrega os dados do arquivo JSON ou cria uma estrutura inicial"""
-    if os.path.exists(LOG_FILE):
-        try:
-            with open(LOG_FILE, 'r') as f:
-                data = json.load(f)
-                return data
-        except (json.JSONDecodeError, FileNotFoundError):
-            pass
-    
-    return {
-        "monitoring": {
-            "url": URL,
-            "created_at": datetime.datetime.now().isoformat(),
-            "total_checks": 0
-        },
-        "records": []
-    }
+## Instalação e Uso
 
-def save_status_data(data):
-    """Salva os dados no arquivo JSON"""
-    with open(LOG_FILE, 'w') as f:
-        json.dump(data, f, indent=2)
+### Pré-requisitos
+- Python 3.8+
+- Git
+- GitHub CLI (gh)
 
-def check():
-    """Realiza o monitoramento e registra os resultados"""
-    data = load_status_data()
-    
-    try:
-        start = datetime.datetime.now()
-        r = requests.get(URL, timeout=10)
-        latency = (datetime.datetime.now() - start).total_seconds() * 1000
-        status = "ONLINE" if r.status_code == 200 else f"OFFLINE ({r.status_code})"
-        
-        record = {
-            "timestamp": datetime.datetime.now().isoformat(),
-            "url": URL,
-            "status": status,
-            "latency_ms": round(latency, 2),
-            "http_code": r.status_code
-        }
+### Configuração
+1. Clone o repositório
+2. Instale dependências: `pip install requests`
+3. Configure Git user: `git config user.name "Seu Nome"`
+4. Execute o monitoramento: `python monitor.py`
+
+### GitHub Actions
+O sistema é projetado para rodar automaticamente via GitHub Actions com workflow de CI/CD integrado.
+
+## FAQ
+
+### Why so many commits?
+"This project uses a GitOps approach for real-time monitoring. Instead of hosting a database, we use the repository as a time-series data store to provide a 100% serverless status page. This allows for transparent, public-auditability of our service uptime and performance metrics."
+
+### How does the dashboard work?
+The dashboard is a static HTML page with embedded Chart.js graphs. The `monitor.py` script injects JSON data directly into the HTML, which is then read by the JavaScript to render real-time charts and metrics.
+
+### What services are monitored?
+- **GitHub Pages**: Main website uptime and performance
+- **GitHub API**: Repository metrics and engagement data
+- **CodePulse Monorepo**: Page size auditing for performance monitoring
+
+### How is uptime calculated?
+Uptime percentages are calculated based on successful HTTP responses. For new services with limited history, the system assumes 100% uptime if the current check is successful (Initial State Logic).
+
+## Desenvolvimento
+
+### Estrutura de Arquivos
+- `monitor.py`: Core monitoring logic with advanced metrics
+- `assets/script.js`: Dashboard JavaScript with Chart.js integration
+- `assets/style.css`: Modular CSS with dark theme
+- `workflow.sh`: Git automation with randomized commits
+- `index.html`: Static dashboard template
+
+### Contributing
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Test thoroughly
+5. Submit a pull request
+
+## Licença
+
+Este projeto está licenciado sob a MIT License - veja o arquivo [LICENSE](LICENSE) para detalhes.
         
     except Exception as e:
         record = {

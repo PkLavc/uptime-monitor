@@ -43,13 +43,17 @@ def load_history():
             if "services" not in history:
                 history = {
                     "services": {key: [] for key in SERVICES.keys()},
-                    "created_at": datetime.datetime.now().isoformat()
+                    "created_at": datetime.datetime.now().isoformat(),
+                    "page_size_history": []
                 }
             else:
                 # Garante que todas as chaves de serviços existam
                 for service_key in SERVICES.keys():
                     if service_key not in history["services"]:
                         history["services"][service_key] = []
+                # Garante que page_size_history exista
+                if "page_size_history" not in history:
+                    history["page_size_history"] = []
             
             return history
         except (json.JSONDecodeError, FileNotFoundError):
@@ -57,7 +61,8 @@ def load_history():
     
     return {
         "services": {key: [] for key in SERVICES.keys()},
-        "created_at": datetime.datetime.now().isoformat()
+        "created_at": datetime.datetime.now().isoformat(),
+        "page_size_history": []
     }
 
 def save_history(history):
@@ -118,7 +123,7 @@ def analyze_security_headers(response):
 
 def check_service(service_key, service_config):
     """Realiza monitoramento avançado com métricas detalhadas"""
-    timestamp = datetime.datetime.now().isoformat()
+    timestamp = datetime.datetime.now(datetime.timezone.utc).isoformat()
     
     try:
         # Medidas de tempo detalhadas
@@ -212,7 +217,7 @@ def add_record_to_history(history, service_key, record):
 
 def cleanup_old_records(history):
     """Remove registros com mais de 90 dias para manter o repositório leve"""
-    cutoff_date = datetime.datetime.now() - datetime.timedelta(days=CLEANUP_DAYS)
+    cutoff_date = datetime.datetime.now().replace(tzinfo=None) - datetime.timedelta(days=CLEANUP_DAYS)
     
     for service_key in history["services"]:
         original_count = len(history["services"][service_key])
@@ -295,7 +300,7 @@ def calculate_performance_metrics(records, time_filter=None):
 
 def get_time_filters():
     """Obtém os filtros de tempo para cálculos estatísticos"""
-    now = datetime.datetime.now()
+    now = datetime.datetime.now(datetime.timezone.utc)
     
     # Últimas 24 horas
     last_24h = now - datetime.timedelta(hours=24)
@@ -334,6 +339,11 @@ def process_service_data(history, service_key):
     sla_24h = calculate_uptime_percentage(records, time_filters["last_24h"])
     sla_7d = calculate_uptime_percentage(records, time_filters["last_7d"])
     sla_30d = calculate_uptime_percentage(records, time_filters["last_30d"])
+    
+    # Initial State Logic: Se histórico pequeno, assume 100% se teste atual OK
+    if len(records) < 10:  # Menos de 10 registros
+        if current_status == "ONLINE":
+            sla_24h = sla_7d = sla_30d = 100.0
     
     # Calcula métricas de performance
     performance = calculate_performance_metrics(records, time_filters["last_24h"])
@@ -498,6 +508,17 @@ def inject_data_into_html(history):
     
     return True
 
+def check_page_size(url="https://pklavc.github.io/codepulse-monorepo/"):
+    """Verifica o tamanho da página do codepulse-monorepo"""
+    try:
+        response = requests.get(url, timeout=10)
+        if response.status_code == 200:
+            size_kb = len(response.content) / 1024
+            return round(size_kb, 2)
+        return 0
+    except Exception:
+        return 0
+
 def should_alert_services(history):
     """Verifica se algum serviço está com problemas"""
     for service_key in SERVICES.keys():
@@ -533,6 +554,29 @@ def main():
     # Limpeza de registros antigos
     print("Realizando limpeza de registros antigos...")
     cleanup_old_records(history)
+    
+    # Verifica tamanho da página
+    print("Verificando tamanho da página do codepulse-monorepo...")
+    current_size = check_page_size()
+    if current_size > 0:
+        history["page_size_history"].append({
+            "timestamp": datetime.datetime.now().isoformat(),
+            "size_kb": current_size
+        })
+        # Mantém apenas últimos 30 registros de page size
+        if len(history["page_size_history"]) > 30:
+            history["page_size_history"] = history["page_size_history"][-30:]
+        
+        # Verifica mudança significativa
+        if len(history["page_size_history"]) > 1:
+            previous_size = history["page_size_history"][-2]["size_kb"]
+            change_percent = abs(current_size - previous_size) / previous_size * 100
+            if change_percent > 20:  # Mudança > 20%
+                print(f"ALERTA: Mudança significativa no tamanho da página detectada: {previous_size}KB -> {current_size}KB ({change_percent:.1f}%)")
+                # Sinaliza para commit especial
+                os.environ["MONITOR_EXIT_CODE"] = "1"
+    
+    save_history(history)
     
     # Injeta dados no HTML
     print("Atualizando dashboard de observabilidade...")
