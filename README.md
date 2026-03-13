@@ -1,346 +1,62 @@
 # SRE Dashboard - Uptime Monitor System
 
-## Current Status
+## Overview
 
-![Online](https://img.shields.io/badge/Status-ONLINE-brightgreen)
+This repository implements an automated uptime monitoring system that periodically checks critical services and updates a GitHub-hosted status dashboard.
 
-**Last Check:** 2026-03-12 17:37:31  
-**URL:** https://pklavc.github.io/  
-**Status:** ONLINE  
-**Latency:** 732.86ms  
-**Average Latency (last 20):** 732.86ms  
-**Total Checks:** 1
+## What It Does
 
----
+- Runs scheduled HTTP checks against configured endpoints
+- Tracks uptime, latency, and performance metrics
+- Stores monitoring history in `history.json`
+- Automatically creates and merges PRs to keep the dashboard up to date
+- Displays real-time charts via a static `index.html` dashboard
 
-## Visão Geral
-
-Este é um sistema automatizado de monitoramento de disponibilidade (uptime) que verifica periodicamente o status de serviços web e registra os resultados em um repositório Git. O sistema cria automaticamente Pull Requests e realiza merges para atualizar o histórico de monitoramento, utilizando uma abordagem GitOps para fornecer uma página de status serverless e auditável publicamente.
-
-## Funcionamento do Sistema
-
-O sistema funciona em 4 etapas principais:
-
-1. **Monitoramento**: O script `monitor.py` faz requisições HTTP aos serviços monitorados e registra o status, latência e métricas de performance
-2. **Armazenamento**: Os resultados são salvos no arquivo `history.json` com rotação de logs (máx 500 registros)
-3. **Dashboard**: O script atualiza automaticamente o dashboard interativo em `index.html` com gráficos em tempo real
-4. **Atualização do Repositório**: O script `workflow.sh` cria branches, commita as alterações e realiza merge automático via GitHub Actions
-
-## Arquitetura do Sistema
+## Project Structure
 
 ```
 uptime-monitor/
-├── monitor.py              # Script de monitoramento principal
-├── workflow.sh             # Script de automação Git com variabilidade
-├── index.html              # Dashboard interativo com gráficos Chart.js
+├── monitor.py              # Main monitoring script (checks + dashboard injection)
+├── workflow.sh             # Helper script to run the full workflow locally
+├── .github/workflows/      # GitHub Actions workflows (scheduled runs + PR automation)
+├── index.html              # Static dashboard template
 ├── assets/
-│   ├── style.css           # Estilos CSS modulares
-│   └── script.js           # Lógica JavaScript do dashboard
-├── history.json            # Histórico de monitoramento em JSON
-├── uptime-badge.json       # Badge do Shields.io
-├── data/status.json        # Dados legados (compatibilidade)
-└── README.md              # Documentação e status atual
+│   ├── style.css           # Dashboard styling
+│   └── script.js           # Dashboard charting logic
+├── history.json            # Stored monitoring history
+├── uptime-badge.json       # Shields.io badge configuration
+└── README.md               # Documentation (this file)
 ```
 
-## Funcionalidades
+## How It Works
 
-### Monitoramento Avançado
-- **Métricas de Performance**: DNS, TCP, Transfer times
-- **SLA Calculation**: Disponibilidade 24h, 7d, 30d
-- **Health Checks**: Verificação de conteúdo e headers de segurança
-- **Page Size Monitoring**: Auditoria de performance do codepulse-monorepo
-- **Incident Tracking**: Log automático de incidentes
+1. `monitor.py` checks endpoints and records results.
+2. It injects the latest JSON data into `index.html` so the dashboard updates without a backend.
+3. GitHub Actions runs the monitor periodically, commits changes, and opens/merges a PR using a PAT.
 
-### Dashboard Interativo
-- **Gráficos em Tempo Real**: Uptime, latência e tamanho de página
-- **Status Cards**: Status atual e métricas por serviço
-- **Responsive Design**: Otimizado para desktop e mobile
-- **Dark Theme**: Interface moderna com tema escuro
+## Getting Started
 
-### GitOps Automation
-- **Pull Requests Automáticas**: Commits regulares com mensagens variadas
-- **Sleep Aleatório**: Evita padrões previsíveis (1-300s)
-- **Alert System**: Commits especiais para incidentes
-- **Serverless**: 100% hospedado no GitHub Pages
+### Requirements
 
-## Instalação e Uso
-
-### Pré-requisitos
 - Python 3.8+
 - Git
-- GitHub CLI (gh)
+- (Optional) GitHub CLI (`gh`) for local workflow testing
 
-### Configuração
-1. Clone o repositório
-2. Instale dependências: `pip install requests`
-3. Configure Git user: `git config user.name "Seu Nome"`
-4. Execute o monitoramento: `python monitor.py`
+### Run Locally
 
-### GitHub Actions
-O sistema é projetado para rodar automaticamente via GitHub Actions com workflow de CI/CD integrado.
-
-## FAQ
-
-### Why so many commits?
-"This project uses a GitOps approach for real-time monitoring. Instead of hosting a database, we use the repository as a time-series data store to provide a 100% serverless status page. This allows for transparent, public-auditability of our service uptime and performance metrics."
-
-### How does the dashboard work?
-The dashboard is a static HTML page with embedded Chart.js graphs. The `monitor.py` script injects JSON data directly into the HTML, which is then read by the JavaScript to render real-time charts and metrics.
-
-### What services are monitored?
-- **GitHub Pages**: Main website uptime and performance
-- **GitHub API**: Repository metrics and engagement data
-- **CodePulse Monorepo**: Page size auditing for performance monitoring
-
-### How is uptime calculated?
-Uptime percentages are calculated based on successful HTTP responses. For new services with limited history, the system assumes 100% uptime if the current check is successful (Initial State Logic).
-
-## Desenvolvimento
-
-### Estrutura de Arquivos
-- `monitor.py`: Core monitoring logic with advanced metrics
-- `assets/script.js`: Dashboard JavaScript with Chart.js integration
-- `assets/style.css`: Modular CSS with dark theme
-- `workflow.sh`: Git automation with randomized commits
-- `index.html`: Static dashboard template
-
-### Contributing
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Test thoroughly
-5. Submit a pull request
-
-## Licença
-
-Este projeto está licenciado sob a MIT License - veja o arquivo [LICENSE](LICENSE) para detalhes.
-        
-    except Exception as e:
-        record = {
-            "timestamp": datetime.datetime.now().isoformat(),
-            "url": URL,
-            "status": "ERROR",
-            "latency_ms": 0,
-            "error": str(e)
-        }
-    
-    # Adiciona o novo registro
-    data["records"].append(record)
-    data["monitoring"]["total_checks"] += 1
-    
-    # Implementa log rotation (mantém apenas os últimos 100 registros)
-    if len(data["records"]) > MAX_RECORDS:
-        data["records"] = data["records"][-MAX_RECORDS:]
-    
-    save_status_data(data)
-    return record
-
-def calculate_average_latency(data, limit=20):
-    """Calcula a latência média dos últimos registros"""
-    online_records = [r for r in data["records"] if r.get("status") == "ONLINE" and r.get("latency_ms", 0) > 0]
-    if not online_records:
-        return 0
-    
-    recent_records = online_records[-limit:] if len(online_records) >= limit else online_records
-    return sum(r["latency_ms"] for r in recent_records) / len(recent_records)
-
-def get_latency_trend(data, last_n=5):
-    """Verifica a tendência de latência nas últimas N verificações"""
-    online_records = [r for r in data["records"] if r.get("status") == "ONLINE" and r.get("latency_ms", 0) > 0]
-    if len(online_records) < last_n + 1:
-        return None, 0
-    
-    recent = online_records[-last_n:]
-    older = online_records[-(last_n*2):-last_n]
-    
-    recent_avg = sum(r["latency_ms"] for r in recent) / len(recent)
-    older_avg = sum(r["latency_ms"] for r in older) / len(older)
-    
-    change_percent = ((recent_avg - older_avg) / older_avg) * 100 if older_avg > 0 else 0
-    
-    return recent_avg, change_percent
-
-def update_readme_status():
-    """Atualiza a seção 'Current Status' no README.md"""
-    data = load_status_data()
-    
-    if not data["records"]:
-        return
-    
-    # Obtém o último registro
-    last_record = data["records"][-1]
-    current_status = last_record["status"]
-    
-    # Calcula latência média
-    avg_latency = calculate_average_latency(data)
-    
-    # Determina a badge de status
-    if current_status == "ONLINE":
-        status_badge = "![Online](https://img.shields.io/badge/Status-ONLINE-brightgreen)"
-    elif current_status == "ERROR":
-        status_badge = "![Error](https://img.shields.io/badge/Status-ERROR-orange)"
-    else:
-        status_badge = "![Offline](https://img.shields.io/badge/Status-OFFLINE-red)"
-    
-    # Formata o timestamp
-    last_check_time = datetime.datetime.fromisoformat(last_record["timestamp"]).strftime("%Y-%m-%d %H:%M:%S")
-    
-    # Cria a seção de status
-    status_section = f"""## Current Status
-
-{status_badge}
-
-**Last Check:** {last_check_time}  
-**URL:** {URL}  
-**Status:** {current_status}  
-**Latency:** {last_record.get('latency_ms', 0)}ms  
-**Average Latency (last 20):** {avg_latency:.2f}ms  
-**Total Checks:** {data['monitoring']['total_checks']}
-
----
-
-"""
-    
-    # Lê o README atual
-    try:
-        with open("README.md", 'r') as f:
-            readme_content = f.read()
-    except FileNotFoundError:
-        readme_content = "# Uptime Monitor System\n\n"
-    
-    # Remove a seção existente de Current Status se houver
-    if "## Current Status" in readme_content:
-        lines = readme_content.split('\n')
-        new_lines = []
-        skip = False
-        for line in lines:
-            if line.strip() == "## Current Status":
-                skip = True
-                continue
-            elif skip and line.startswith("## "):
-                skip = False
-                new_lines.append(line)
-            elif not skip:
-                new_lines.append(line)
-        readme_content = '\n'.join(new_lines)
-    
-    # Insere a nova seção logo após o cabeçalho principal
-    if "# Uptime Monitor System" in readme_content:
-        parts = readme_content.split("# Uptime Monitor System\n\n", 1)
-        if len(parts) > 1:
-            readme_content = parts[0] + "# Uptime Monitor System\n\n" + status_section + parts[1]
-        else:
-            readme_content = "# Uptime Monitor System\n\n" + status_section + parts[0]
-    else:
-        readme_content = "# Uptime Monitor System\n\n" + status_section + readme_content
-    
-    # Salva o README atualizado
-    with open("README.md", 'w') as f:
-        f.write(readme_content)
-
-def should_alert_latency(data):
-    """Verifica se deve gerar alerta de latência"""
-    _, change_percent = get_latency_trend(data)
-    return change_percent > 20 if change_percent is not None else False
-
-def create_alert_flag():
-    """Cria um arquivo de alerta para ser detectado pelo workflow.sh"""
-    with open("ALERT_FLAG", "w") as f:
-        f.write("Latency spike detected at " + datetime.datetime.now().isoformat())
-
-if __name__ == "__main__":
-    # Executa o monitoramento
-    record = check()
-    
-    # Atualiza o README
-    update_readme_status()
-    
-    # Verifica necessidade de alerta de latência
-    data = load_status_data()
-    if should_alert_latency(data):
-        print("ALERT: Latency spike detected!")
-        create_alert_flag()
-        sys.exit(1)  # Indica alerta para o workflow
-    else:
-        print("Monitoramento concluído com sucesso")
-        sys.exit(0)
+```sh
+pip install requests
+python monitor.py
 ```
 
-### workflow.sh (Versão Atualizada)
+## GitHub Actions
 
-```bash
-#!/bin/bash
-set -e # Para o script se qualquer comando falhar
+The workflow uses a Personal Access Token (`PAT_SHARK`) stored as a repository secret to create and merge PRs under your user account.
 
-# Identidade USA Standard para atribuição de conquistas
-git config user.name "PkLavc"
-git config user.email "patrickajm@gmail.com"
+## License
 
-# Verifica se houve mudança real no log antes de criar PR
-if git diff --exit-code data/status.json README.md; then
-    echo "Nenhuma mudança detectada. Pulando merge."
-    exit 0
-fi
+MIT License — see [LICENSE](LICENSE) for details.
 
-BRANCH="status-update-$(date +%Y%m%d-%H%M)"
-git checkout -b $BRANCH
-
-git add data/status.json README.md
-
-# Determina a mensagem de commit baseada nos resultados
-if [ -f "ALERT_FLAG" ]; then
-    git commit -m "performance: latency spike detected
-
-Automated uptime check detected significant latency increase.
-Last check: $(tail -1 data/status.json | jq -r '.timestamp')
-Status: $(tail -1 data/status.json | jq -r '.status')"
-    rm -f ALERT_FLAG
-else
-    git commit -m "data: update uptime metrics and status dashboard
-
-Automated uptime check completed successfully.
-Last check: $(tail -1 data/status.json | jq -r '.timestamp')
-Status: $(tail -1 data/status.json | jq -r '.status')"
-fi
-
-git push origin $BRANCH --force
-
-# Criar e Mesclar PR com metadados profissionais
-PR_URL=$(gh pr create --title "📈 System Metrics: $(date +'%Y-%m-%d %H:%M')" \
-                      --body "Automated uptime check and dashboard synchronization.
-
-**Changes:**
-- Updated uptime metrics in data/status.json
-- Refreshed status dashboard in README.md
-
-**Last Check:** $(tail -1 data/status.json | jq -r '.timestamp')
-**Status:** $(tail -1 data/status.json | jq -r '.status')
-**Latency:** $(tail -1 data/status.json | jq -r '.latency_ms')ms" \
-                      --base main --head $BRANCH)
-
-gh pr merge "$PR_URL" --merge --delete-branch --admin
-```
-
-### .github/workflows/uptime.yml
-
-```yaml
-name: Uptime Monitor
-
-on:
-  schedule:
-    # Executa a cada 60 minutos
-    - cron: "0 * * * *"
-  workflow_dispatch:
-
-jobs:
-  uptime-monitor:
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
-      pull-requests: write
-      actions: read
-    
-    steps:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:

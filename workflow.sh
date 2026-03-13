@@ -4,7 +4,7 @@ set -e # Para o script se qualquer comando falhar
 # Sleep aleatório entre 1 e 300 segundos para variabilidade
 sleep $((RANDOM % 300 + 1))
 
-# Identidade USA Standard para atribuição de conquistas
+# Identidade 
 git config user.name "PkLavc"
 git config user.email "patrickajm@gmail.com"
 
