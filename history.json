@@ -211,6 +211,27 @@
           "x-content-type-options": false
         },
         "engagement": {}
+      },
+      {
+        "timestamp": "2026-03-13T00:44:19.012676+00:00",
+        "url": "https://pklavc.github.io/",
+        "status": "ONLINE",
+        "http_code": 200,
+        "total_time_ms": 202.11,
+        "dns_time_ms": 19.41,
+        "tcp_time_ms": 2.62,
+        "transfer_time_ms": 180.08,
+        "content_ok": true,
+        "found_keywords": [
+          "PkLavc",
+          "Patrick",
+          "Software Engineer"
+        ],
+        "security_headers": {
+          "strict-transport-security": true,
+          "x-content-type-options": false
+        },
+        "engagement": {}
       }
     ],
     "github_api": [
@@ -402,6 +423,27 @@
           "forks": 0,
           "open_issues": 0
         }
+      },
+      {
+        "timestamp": "2026-03-13T00:44:19.238858+00:00",
+        "url": "https://api.github.com/repos/PkLavc/codepulse-monorepo",
+        "status": "ONLINE",
+        "http_code": 200,
+        "total_time_ms": 148.67,
+        "dns_time_ms": 1.51,
+        "tcp_time_ms": 15.73,
+        "transfer_time_ms": 131.43,
+        "content_ok": true,
+        "found_keywords": [],
+        "security_headers": {
+          "strict-transport-security": true,
+          "x-content-type-options": true
+        },
+        "engagement": {
+          "stars": 5,
+          "forks": 0,
+          "open_issues": 0
+        }
       }
     ]
   },
@@ -413,6 +455,10 @@
     },
     {
       "timestamp": "2026-03-13T00:37:42.623113+00:00",
+      "size_kb": 22.97
+    },
+    {
+      "timestamp": "2026-03-13T00:44:19.480093+00:00",
       "size_kb": 22.97
     }
   ]
