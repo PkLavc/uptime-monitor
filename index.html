@@ -3,22 +3,22 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SRE Dashboard - PkLavc | Site Reliability Engineering</title>
+        <title>SRE Dashboard - PkLavc | Site Reliability Engineering</title>
     <meta name="description" content="SRE Dashboard monitoring GitHub Pages and CodePulse Monorepo with advanced observability metrics">
     <meta name="keywords" content="uptime, monitoring, sre, reliability, github, status">
     
     <!-- OpenGraph Meta Tags for Social Sharing -->
     <meta property="og:title" content="SRE Dashboard - PkLavc">
-    <meta property="og:description" content="Advanced uptime monitoring with SLA metrics, performance analysis, and incident tracking">
+    <meta property="og:description" content="Advanced uptime monitoring of GitHub Pages and CodePulse Monorepo ecosystem with SLA metrics, performance analysis, and incident tracking">
     <meta property="og:type" content="website">
-    <meta property="og:url" content="https://pklavc.github.io/">
+    <meta property="og:url" content="https://pklavc.github.io/codepulse-monorepo/">
     <meta property="og:image" content="https://pklavc.github.io/assets/dashboard-preview.png">
     <meta property="og:site_name" content="PkLavc SRE Dashboard">
     
     <!-- Twitter Card Meta Tags -->
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="SRE Dashboard - PkLavc">
-    <meta name="twitter:description" content="Advanced uptime monitoring with SLA metrics, performance analysis, and incident tracking">
+    <meta name="twitter:description" content="Advanced uptime monitoring of GitHub Pages and CodePulse Monorepo ecosystem with SLA metrics, performance analysis, and incident tracking">
     <meta name="twitter:image" content="https://pklavc.github.io/assets/dashboard-preview.png">
     
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -483,8 +483,8 @@
                     <div class="service-title">
                         <div class="status-indicator" id="github-api-status"></div>
                         <div>
-                            <div class="service-name">GitHub API</div>
-                            <div class="service-url">api.github.com/repos/PkLavc/codepulse-monorepo</div>
+                            <div class="service-name">CodePulse Monorepo</div>
+                            <div class="service-url">https://pklavc.github.io/codepulse-monorepo/</div>
                         </div>
                     </div>
                     <span class="badge online" id="github-api-badge">ONLINE</span>
@@ -515,17 +515,17 @@
 
                 <div class="metrics-grid">
                     <div class="metric-card">
-                        <div class="metric-value" id="api-stars">--</div>
+                        <div class="metric-value" id="github-api-stars">--</div>
                         <div class="metric-label">Stars</div>
                         <div class="metric-sublabel">Repositório</div>
                     </div>
                     <div class="metric-card">
-                        <div class="metric-value" id="api-forks">--</div>
+                        <div class="metric-value" id="github-api-forks">--</div>
                         <div class="metric-label">Forks</div>
                         <div class="metric-sublabel">Repositório</div>
                     </div>
                     <div class="metric-card">
-                        <div class="metric-value" id="api-issues">--</div>
+                        <div class="metric-value" id="github-api-issues">--</div>
                         <div class="metric-label">Issues</div>
                         <div class="metric-sublabel">Abertas</div>
                     </div>
@@ -627,10 +627,16 @@
             }
 
             // Update GitHub Pages
-            updateServiceCard('github-pages', data.services.github_pages);
+            updateServiceCard('github-pages', {
+                ...data.services.github_pages,
+                history: data.history.github_pages
+            });
             
             // Update GitHub API
-            updateServiceCard('github-api', data.services.github_api);
+            updateServiceCard('github-api', {
+                ...data.services.github_api,
+                history: data.history.github_api
+            });
 
             // Update Incident Log
             updateIncidentLog(data.incident_log);
@@ -645,6 +651,20 @@
             
             lastUpdate.textContent = `Última atualização: ${updateTime}`;
             lastUpdateBadge.textContent = updateTime;
+        }
+
+        function calculateSLA(history) {
+            if (!history || history.length === 0) return 0;
+            const onlineCount = history.filter(item => item.status === 'ONLINE').length;
+            return Math.round((onlineCount / history.length) * 100);
+        }
+
+        function calculateLatency(history) {
+            if (!history || history.length === 0) return 0;
+            const validLatencies = history.filter(item => item.total_time_ms > 0);
+            if (validLatencies.length === 0) return 0;
+            const sum = validLatencies.reduce((acc, item) => acc + item.total_time_ms, 0);
+            return Math.round(sum / validLatencies.length);
         }
 
         function updateServiceCard(prefix, serviceData) {
@@ -667,34 +687,55 @@
             }
 
             // SLA Metrics
-            document.getElementById(`${prefix}-sla-24h`).textContent = `${serviceData.sla_24h}%`;
-            document.getElementById(`${prefix}-sla-7d`).textContent = `${serviceData.sla_7d}%`;
-            document.getElementById(`${prefix}-sla-30d`).textContent = `${serviceData.sla_30d}%`;
+            const sla24h = calculateSLA(serviceData.history);
+            const sla7d = calculateSLA(serviceData.history);
+            const sla30d = calculateSLA(serviceData.history);
+            
+            document.getElementById(`${prefix}-sla-24h`).textContent = serviceData.history && serviceData.history.length > 0 ? `${sla24h}%` : 'No data';
+            document.getElementById(`${prefix}-sla-7d`).textContent = serviceData.history && serviceData.history.length > 0 ? `${sla7d}%` : 'No data';
+            document.getElementById(`${prefix}-sla-30d`).textContent = serviceData.history && serviceData.history.length > 0 ? `${sla30d}%` : 'No data';
 
             // Performance Metrics
-            const perf = serviceData.performance;
-            if (perf) {
-                document.getElementById(`${prefix}-latency`).textContent = `${perf.avg_latency || 0}ms`;
-                document.getElementById(`${prefix}-dns`).textContent = `${perf.avg_dns_time || 0}ms`;
-                document.getElementById(`${prefix}-tcp`).textContent = `${perf.avg_tcp_time || 0}ms`;
-                document.getElementById(`${prefix}-transfer`).textContent = `${perf.avg_transfer_time || 0}ms`;
-                document.getElementById(`${prefix}-peak`).textContent = perf.peak_hour || '--:--';
+            const latency = calculateLatency(serviceData.history);
+            document.getElementById(`${prefix}-latency`).textContent = serviceData.history && serviceData.history.length > 0 ? `${latency}ms` : 'No data';
+            
+            // Performance breakdown metrics
+            if (serviceData.history && serviceData.history.length > 0) {
+                const validChecks = serviceData.history.filter(item => item.total_time_ms > 0);
+                if (validChecks.length > 0) {
+                    const avgDns = Math.round(validChecks.reduce((sum, item) => sum + item.dns_time_ms, 0) / validChecks.length);
+                    const avgTcp = Math.round(validChecks.reduce((sum, item) => sum + item.tcp_time_ms, 0) / validChecks.length);
+                    const avgTransfer = Math.round(validChecks.reduce((sum, item) => sum + item.transfer_time_ms, 0) / validChecks.length);
+                    
+                    document.getElementById(`${prefix}-dns`).textContent = `${avgDns}ms`;
+                    document.getElementById(`${prefix}-tcp`).textContent = `${avgTcp}ms`;
+                    document.getElementById(`${prefix}-transfer`).textContent = `${avgTransfer}ms`;
+                }
             }
-
+            
             // Engagement Metrics (API only)
             if (prefix === 'github-api' && serviceData.engagement) {
                 const eng = serviceData.engagement;
-                document.getElementById('api-stars').textContent = eng.stars || 0;
-                document.getElementById('api-forks').textContent = eng.forks || 0;
-                document.getElementById('api-issues').textContent = eng.open_issues || 0;
+                document.getElementById('github-api-stars').textContent = eng.stars || 0;
+                document.getElementById('github-api-forks').textContent = eng.forks || 0;
+                document.getElementById('github-api-issues').textContent = eng.open_issues || 0;
             }
         }
 
-        function updateIncidentLog(incidents) {
+        function updateIncidentLog(data) {
             const tbody = document.getElementById('incident-table-body');
             tbody.innerHTML = '';
 
-            if (!incidents || incidents.length === 0) {
+            // Filter ERROR status from history
+            const githubPagesErrors = (window.dashboardData.history.github_pages || []).filter(item => item.status === 'ERROR');
+            const githubApiErrors = (window.dashboardData.history.github_api || []).filter(item => item.status === 'ERROR');
+            
+            const allErrors = [
+                ...githubPagesErrors.map(item => ({ ...item, service: 'GitHub Pages' })),
+                ...githubApiErrors.map(item => ({ ...item, service: 'CodePulse API' }))
+            ].sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+
+            if (allErrors.length === 0) {
                 tbody.innerHTML = `
                     <tr>
                         <td colspan="5" style="text-align: center; color: var(--text-tertiary); padding: 2rem;">
@@ -705,19 +746,16 @@
                 return;
             }
 
-            incidents.forEach(incident => {
+            allErrors.forEach(error => {
                 const row = document.createElement('tr');
                 row.className = 'incident-row';
                 
-                const statusClass = incident.status === 'ONLINE' ? 'status-online' : 
-                                  incident.status === 'OFFLINE' ? 'status-offline' : 'status-warning';
-
                 row.innerHTML = `
-                    <td>${incident.service}</td>
-                    <td><span class="status-pill ${statusClass}">${incident.status}</span></td>
-                    <td>${new Date(incident.start_time).toLocaleString('pt-BR')}</td>
-                    <td>${incident.end_time ? new Date(incident.end_time).toLocaleString('pt-BR') : 'Em andamento'}</td>
-                    <td>${incident.duration}</td>
+                    <td>${error.service}</td>
+                    <td><span class="status-pill status-offline">ERROR</span></td>
+                    <td>${new Date(error.timestamp).toLocaleString('pt-BR')}</td>
+                    <td>Resolvido</td>
+                    <td>${error.error ? error.error.substring(0, 50) + '...' : 'Erro desconhecido'}</td>
                 `;
                 
                 tbody.appendChild(row);
@@ -725,9 +763,169 @@
         }
 
         function updateCharts(data) {
-            // Implement chart updates based on data.history
-            // This would require more complex logic to process time-series data
-            console.log('Charts would be updated here with:', data.history);
+            // Update Latency Trend Chart
+            const latencyCtx = document.getElementById('latency-trend-chart');
+            if (latencyCtx && data.history) {
+                const githubPagesData = data.history.github_pages || [];
+                const githubApiData = data.history.github_api || [];
+                
+                // Get last 24 hours of data
+                const now = new Date();
+                const last24h = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+                
+                const githubPagesFiltered = githubPagesData.filter(item => new Date(item.timestamp) > last24h);
+                const githubApiFiltered = githubApiData.filter(item => new Date(item.timestamp) > last24h);
+                
+                // Create hourly buckets for better visualization
+                const labels = [];
+                const githubPagesLatencies = [];
+                const githubApiLatencies = [];
+                
+                for (let i = 23; i >= 0; i--) {
+                    const hour = new Date(now.getTime() - i * 60 * 60 * 1000);
+                    labels.push(hour.getHours().toString().padStart(2, '0') + ':00');
+                    
+                    const githubHourData = githubPagesFiltered.filter(item => {
+                        const itemHour = new Date(item.timestamp).getHours();
+                        return itemHour === hour.getHours();
+                    });
+                    
+                    const apiHourData = githubApiFiltered.filter(item => {
+                        const itemHour = new Date(item.timestamp).getHours();
+                        return itemHour === hour.getHours();
+                    });
+                    
+                    const githubAvg = githubHourData.length > 0 ? 
+                        githubHourData.reduce((sum, item) => sum + item.total_time_ms, 0) / githubHourData.length : 0;
+                    const apiAvg = apiHourData.length > 0 ? 
+                        apiHourData.reduce((sum, item) => sum + item.total_time_ms, 0) / apiHourData.length : 0;
+                    
+                    githubPagesLatencies.push(githubAvg);
+                    githubApiLatencies.push(apiAvg);
+                }
+                
+                new Chart(latencyCtx, {
+                    type: 'line',
+                    data: {
+                        labels: labels,
+                        datasets: [
+                            {
+                                label: 'GitHub Pages Latency',
+                                data: githubPagesLatencies,
+                                borderColor: '#38bdf8',
+                                backgroundColor: 'rgba(56, 189, 248, 0.1)',
+                                tension: 0.4,
+                                fill: true
+                            },
+                            {
+                                label: 'CodePulse API Latency',
+                                data: githubApiLatencies,
+                                borderColor: '#a78bfa',
+                                backgroundColor: 'rgba(167, 139, 250, 0.1)',
+                                tension: 0.4,
+                                fill: true
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                labels: { color: '#94a3b8' }
+                            }
+                        },
+                        scales: {
+                            x: {
+                                ticks: { color: '#64748b' },
+                                grid: { color: '#334155' }
+                            },
+                            y: {
+                                beginAtZero: true,
+                                ticks: { 
+                                    color: '#64748b',
+                                    callback: function(value) {
+                                        return value + 'ms';
+                                    }
+                                },
+                                grid: { color: '#334155' }
+                            }
+                        }
+                    }
+                });
+            }
+
+            // Update Uptime SLA Chart
+            const slaCtx = document.getElementById('uptime-sla-chart');
+            if (slaCtx && data.history) {
+                const githubPagesSLA = calculateSLA(data.history.github_pages);
+                const githubApiSLA = calculateSLA(data.history.github_api);
+                
+                new Chart(slaCtx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['GitHub Pages', 'CodePulse API'],
+                        datasets: [{
+                            data: [githubPagesSLA, githubApiSLA],
+                            backgroundColor: ['#38bdf8', '#a78bfa'],
+                            borderWidth: 0,
+                            hoverOffset: 4
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                labels: { color: '#94a3b8' }
+                            }
+                        }
+                    }
+                });
+            }
+
+            // Update Engagement Chart
+            const engagementCtx = document.getElementById('engagement-chart');
+            if (engagementCtx && data.services) {
+                const githubApi = data.services.github_api;
+                if (githubApi && githubApi.engagement) {
+                    const { stars, forks, open_issues } = githubApi.engagement;
+                    
+                    new Chart(engagementCtx, {
+                        type: 'bar',
+                        data: {
+                            labels: ['Stars', 'Forks', 'Issues'],
+                            datasets: [{
+                                label: 'CodePulse Engagement',
+                                data: [stars, forks, open_issues],
+                                backgroundColor: ['#f59e0b', '#22c55e', '#ef4444'],
+                                borderWidth: 0,
+                                borderRadius: 4
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                legend: {
+                                    labels: { color: '#94a3b8' }
+                                }
+                            },
+                            scales: {
+                                y: {
+                                    beginAtZero: true,
+                                    ticks: { color: '#64748b' },
+                                    grid: { color: '#334155' }
+                                },
+                                x: {
+                                    ticks: { color: '#64748b' },
+                                    grid: { color: '#334155' }
+                                }
+                            }
+                        }
+                    });
+                }
+            }
         }
 
         // Initialize Dashboard
@@ -735,6 +933,16 @@
             updateDashboard();
             // Update every 60 seconds
             setInterval(updateDashboard, 60000);
+        });
+
+        // Força a atualização assim que o DOM e os dados estiverem prontos
+        window.addEventListener('DOMContentLoaded', () => {
+            if (window.dashboardData) {
+                console.log("Dados detectados, iniciando dashboard...");
+                updateDashboard(); 
+            } else {
+                console.error("Erro: window.dashboardData não encontrado.");
+            }
         });
     </script>
     

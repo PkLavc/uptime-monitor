@@ -361,7 +361,7 @@ def process_service_data(history, service_key):
     performance = calculate_performance_metrics(records, time_filters["last_24h"])
     
     # Status atual (já definido acima)
-    last_check = last_record["timestamp"]
+    last_check = last_record["timestamp"] if last_record else ""
     
     # Engagement (for GitHub API)
     engagement = last_record.get("engagement", {})
