@@ -43,7 +43,7 @@ def load_history():
             if "services" not in history:
                 history = {
                     "services": {key: [] for key in SERVICES.keys()},
-                    "created_at": datetime.datetime.now().isoformat(),
+                    "created_at": datetime.datetime.now(datetime.timezone.utc).isoformat(),
                     "page_size_history": []
                 }
             else:
@@ -61,7 +61,7 @@ def load_history():
     
     return {
         "services": {key: [] for key in SERVICES.keys()},
-        "created_at": datetime.datetime.now().isoformat(),
+        "created_at": datetime.datetime.now(datetime.timezone.utc).isoformat(),
         "page_size_history": []
     }
 
@@ -217,7 +217,7 @@ def add_record_to_history(history, service_key, record):
 
 def cleanup_old_records(history):
     """Remove registros com mais de 90 dias para manter o repositório leve"""
-    cutoff_date = datetime.datetime.now().replace(tzinfo=None) - datetime.timedelta(days=CLEANUP_DAYS)
+    cutoff_date = datetime.datetime.now(datetime.timezone.utc) - datetime.timedelta(days=CLEANUP_DAYS)
     
     for service_key in history["services"]:
         original_count = len(history["services"][service_key])
@@ -452,7 +452,7 @@ def inject_data_into_html(history):
         "incident_log": incident_log,
         "badge": badge_data,
         "history": history["services"],
-        "generated_at": datetime.datetime.now().isoformat()
+        "generated_at": datetime.datetime.now(datetime.timezone.utc).isoformat()
     }
     
     # Converte para JSON
@@ -560,7 +560,7 @@ def main():
     current_size = check_page_size()
     if current_size > 0:
         history["page_size_history"].append({
-            "timestamp": datetime.datetime.now().isoformat(),
+            "timestamp": datetime.datetime.now(datetime.timezone.utc).isoformat(),
             "size_kb": current_size
         })
         # Mantém apenas últimos 30 registros de page size
