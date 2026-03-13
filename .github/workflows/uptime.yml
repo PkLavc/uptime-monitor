@@ -72,7 +72,7 @@ jobs:
       - name: Create and merge PR
         if: steps.changes.outputs.CHANGES == 'true'
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.PAT_SHARK }}
         run: |
           BRANCH="sre-dashboard-$(date +%Y%m%d-%H%M%S)"
           
