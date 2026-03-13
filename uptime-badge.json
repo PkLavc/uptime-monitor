@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
   "label": "Uptime",
-  "message": "100.0%",
-  "color": "brightgreen"
+  "message": "50.0%",
+  "color": "red"
 }
