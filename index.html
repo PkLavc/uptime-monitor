@@ -741,6 +741,8 @@
 
     
 
+    
+
     <!-- INICIO_DADOS_INJECAO -->
     <!-- Dados de observabilidade injetados pelo monitor.py -->
     <script>
@@ -752,15 +754,15 @@
       "sla_7d": 100.0,
       "sla_30d": 100.0,
       "performance": {
-        "avg_latency": 227.14,
-        "avg_dns_time": 8.56,
-        "avg_tcp_time": 21.85,
-        "avg_transfer_time": 196.73,
+        "avg_latency": 210.78,
+        "avg_dns_time": 13.18,
+        "avg_tcp_time": 16.73,
+        "avg_transfer_time": 180.87,
         "peak_hour": "18:01",
         "slowest_response": 500.34,
         "fastest_response": 49.03
       },
-      "last_check": "2026-03-12T22:31:02.555012",
+      "last_check": "2026-03-13T00:16:37.938645+00:00",
       "engagement": {}
     },
     "github_api": {
@@ -769,15 +771,15 @@
       "sla_7d": 100.0,
       "sla_30d": 100.0,
       "performance": {
-        "avg_latency": 305.57,
-        "avg_dns_time": 8.24,
-        "avg_tcp_time": 30.66,
-        "avg_transfer_time": 266.67,
+        "avg_latency": 408.31,
+        "avg_dns_time": 24.9,
+        "avg_tcp_time": 20.21,
+        "avg_transfer_time": 363.2,
         "peak_hour": "18:01",
         "slowest_response": 627.7,
         "fastest_response": 101.35
       },
-      "last_check": "2026-03-12T22:31:02.612689",
+      "last_check": "2026-03-13T00:16:38.130500+00:00",
       "engagement": {
         "stars": 5,
         "forks": 0,
@@ -785,12 +787,20 @@
       }
     }
   },
-  "incident_log": [],
+  "incident_log": [
+    {
+      "service": "github_pages",
+      "start_time": "2026-03-12T23:54:04.675120+00:00",
+      "end_time": "2026-03-13T00:16:37.938645+00:00",
+      "status": "ERROR",
+      "duration": "0:22:33"
+    }
+  ],
   "badge": {
     "schemaVersion": 1,
     "label": "Uptime",
-    "message": "100.0%",
-    "color": "brightgreen"
+    "message": "50.0%",
+    "color": "red"
   },
   "history": {
     "github_io": [
@@ -902,6 +912,87 @@
           "x-content-type-options": false
         },
         "engagement": {}
+      },
+      {
+        "timestamp": "2026-03-12T23:54:04.675120+00:00",
+        "url": "https://pklavc.github.io/",
+        "status": "ERROR",
+        "http_code": 0,
+        "total_time_ms": 0,
+        "dns_time_ms": 0,
+        "tcp_time_ms": 0,
+        "transfer_time_ms": 0,
+        "content_ok": false,
+        "found_keywords": [],
+        "security_headers": {},
+        "error": "HTTPSConnectionPool(host='pklavc.github.io', port=443): Max retries exceeded with url: / (Caused by ConnectTimeoutError(<HTTPSConnection(host='pklavc.github.io', port=443) at 0x158a3f5b770>, 'Connection to pklavc.github.io timed out. (connect timeout=10)'))",
+        "engagement": {}
+      },
+      {
+        "timestamp": "2026-03-12T23:55:17.863259+00:00",
+        "url": "https://pklavc.github.io/",
+        "status": "ERROR",
+        "http_code": 0,
+        "total_time_ms": 0,
+        "dns_time_ms": 0,
+        "tcp_time_ms": 0,
+        "transfer_time_ms": 0,
+        "content_ok": false,
+        "found_keywords": [],
+        "security_headers": {},
+        "error": "HTTPSConnectionPool(host='pklavc.github.io', port=443): Max retries exceeded with url: / (Caused by ConnectTimeoutError(<HTTPSConnection(host='pklavc.github.io', port=443) at 0x1f476fcb770>, 'Connection to pklavc.github.io timed out. (connect timeout=10)'))",
+        "engagement": {}
+      },
+      {
+        "timestamp": "2026-03-13T00:01:18.835646+00:00",
+        "url": "https://pklavc.github.io/",
+        "status": "ERROR",
+        "http_code": 0,
+        "total_time_ms": 0,
+        "dns_time_ms": 0,
+        "tcp_time_ms": 0,
+        "transfer_time_ms": 0,
+        "content_ok": false,
+        "found_keywords": [],
+        "security_headers": {},
+        "error": "HTTPSConnectionPool(host='pklavc.github.io', port=443): Max retries exceeded with url: / (Caused by ConnectTimeoutError(<HTTPSConnection(host='pklavc.github.io', port=443) at 0x20032e6b770>, 'Connection to pklavc.github.io timed out. (connect timeout=10)'))",
+        "engagement": {}
+      },
+      {
+        "timestamp": "2026-03-13T00:05:36.986971+00:00",
+        "url": "https://pklavc.github.io/",
+        "status": "ERROR",
+        "http_code": 0,
+        "total_time_ms": 0,
+        "dns_time_ms": 0,
+        "tcp_time_ms": 0,
+        "transfer_time_ms": 0,
+        "content_ok": false,
+        "found_keywords": [],
+        "security_headers": {},
+        "error": "HTTPSConnectionPool(host='pklavc.github.io', port=443): Max retries exceeded with url: / (Caused by ConnectTimeoutError(<HTTPSConnection(host='pklavc.github.io', port=443) at 0x23ec3e7b770>, 'Connection to pklavc.github.io timed out. (connect timeout=10)'))",
+        "engagement": {}
+      },
+      {
+        "timestamp": "2026-03-13T00:16:37.938645+00:00",
+        "url": "https://pklavc.github.io/",
+        "status": "ONLINE",
+        "http_code": 200,
+        "total_time_ms": 161.7,
+        "dns_time_ms": 27.03,
+        "tcp_time_ms": 1.37,
+        "transfer_time_ms": 133.3,
+        "content_ok": true,
+        "found_keywords": [
+          "PkLavc",
+          "Patrick",
+          "Software Engineer"
+        ],
+        "security_headers": {
+          "strict-transport-security": true,
+          "x-content-type-options": false
+        },
+        "engagement": {}
       }
     ],
     "github_api": [
@@ -967,10 +1058,115 @@
           "forks": 0,
           "open_issues": 0
         }
+      },
+      {
+        "timestamp": "2026-03-12T23:54:44.835200+00:00",
+        "url": "https://api.github.com/repos/PkLavc/codepulse-monorepo",
+        "status": "ONLINE",
+        "http_code": 200,
+        "total_time_ms": 603.31,
+        "dns_time_ms": 1.24,
+        "tcp_time_ms": 16.82,
+        "transfer_time_ms": 585.25,
+        "content_ok": true,
+        "found_keywords": [],
+        "security_headers": {
+          "strict-transport-security": true,
+          "x-content-type-options": true
+        },
+        "engagement": {
+          "stars": 5,
+          "forks": 0,
+          "open_issues": 0
+        }
+      },
+      {
+        "timestamp": "2026-03-12T23:55:57.908766+00:00",
+        "url": "https://api.github.com/repos/PkLavc/codepulse-monorepo",
+        "status": "ONLINE",
+        "http_code": 200,
+        "total_time_ms": 534.03,
+        "dns_time_ms": 47.29,
+        "tcp_time_ms": 12.93,
+        "transfer_time_ms": 473.81,
+        "content_ok": true,
+        "found_keywords": [],
+        "security_headers": {
+          "strict-transport-security": true,
+          "x-content-type-options": true
+        },
+        "engagement": {
+          "stars": 5,
+          "forks": 0,
+          "open_issues": 0
+        }
+      },
+      {
+        "timestamp": "2026-03-13T00:01:58.864604+00:00",
+        "url": "https://api.github.com/repos/PkLavc/codepulse-monorepo",
+        "status": "ONLINE",
+        "http_code": 200,
+        "total_time_ms": 508.8,
+        "dns_time_ms": 55.86,
+        "tcp_time_ms": 2.71,
+        "transfer_time_ms": 450.23,
+        "content_ok": true,
+        "found_keywords": [],
+        "security_headers": {
+          "strict-transport-security": true,
+          "x-content-type-options": true
+        },
+        "engagement": {
+          "stars": 5,
+          "forks": 0,
+          "open_issues": 0
+        }
+      },
+      {
+        "timestamp": "2026-03-13T00:06:17.038793+00:00",
+        "url": "https://api.github.com/repos/PkLavc/codepulse-monorepo",
+        "status": "ONLINE",
+        "http_code": 200,
+        "total_time_ms": 471.12,
+        "dns_time_ms": 68.15,
+        "tcp_time_ms": 18.2,
+        "transfer_time_ms": 384.77,
+        "content_ok": true,
+        "found_keywords": [],
+        "security_headers": {
+          "strict-transport-security": true,
+          "x-content-type-options": true
+        },
+        "engagement": {
+          "stars": 5,
+          "forks": 0,
+          "open_issues": 0
+        }
+      },
+      {
+        "timestamp": "2026-03-13T00:16:38.130500+00:00",
+        "url": "https://api.github.com/repos/PkLavc/codepulse-monorepo",
+        "status": "ONLINE",
+        "http_code": 200,
+        "total_time_ms": 232.49,
+        "dns_time_ms": 1.95,
+        "tcp_time_ms": 19.0,
+        "transfer_time_ms": 211.54,
+        "content_ok": true,
+        "found_keywords": [],
+        "security_headers": {
+          "strict-transport-security": true,
+          "x-content-type-options": true
+        },
+        "engagement": {
+          "stars": 5,
+          "forks": 0,
+          "open_issues": 0
+        }
       }
     ]
   },
-  "generated_at": "2026-03-12T22:31:02.720463"
+  "generated_at": "2026-03-13T00:16:38.533691+00:00"
 };
     </script>
     <!-- FIM_DADOS_INJECAO -->
