@@ -771,8 +771,15 @@
         }
 
         function updateCharts(data) {
+            // Keep chart instances so we can destroy them before recreating
+            window.__charts = window.__charts || {};
+
             // Update Latency Trend Chart
             const latencyCtx = document.getElementById('latency-trend-chart');
+            if (latencyCtx && window.__charts.latency) {
+                window.__charts.latency.destroy();
+            }
+
             if (latencyCtx && data.history) {
                 const githubPagesData = data.history.github_pages || [];
                 const githubApiData = data.history.github_api || [];
@@ -812,7 +819,7 @@
                     githubApiLatencies.push(apiAvg);
                 }
                 
-                new Chart(latencyCtx, {
+                window.__charts.latency = new Chart(latencyCtx, {
                     type: 'line',
                     data: {
                         labels: labels,
@@ -866,10 +873,14 @@
             // Update Uptime SLA Chart
             const slaCtx = document.getElementById('uptime-sla-chart');
             if (slaCtx && data.history) {
+                if (window.__charts.sla) {
+                    window.__charts.sla.destroy();
+                }
+
                 const githubPagesSLA = calculateSLA(data.history.github_pages);
                 const githubApiSLA = calculateSLA(data.history.github_api);
                 
-                new Chart(slaCtx, {
+                window.__charts.sla = new Chart(slaCtx, {
                     type: 'doughnut',
                     data: {
                         labels: ['GitHub Pages', 'CodePulse API'],
@@ -895,11 +906,15 @@
             // Update Engagement Chart
             const engagementCtx = document.getElementById('engagement-chart');
             if (engagementCtx && data.services) {
+                if (window.__charts.engagement) {
+                    window.__charts.engagement.destroy();
+                }
+
                 const githubApi = data.services.codepulse;
                 if (githubApi && githubApi.engagement) {
                     const { stars, forks, open_issues } = githubApi.engagement;
                     
-                    new Chart(engagementCtx, {
+                    window.__charts.engagement = new Chart(engagementCtx, {
                         type: 'bar',
                         data: {
                             labels: ['Stars', 'Forks', 'Issues'],
