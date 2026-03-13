@@ -415,6 +415,33 @@
 
     <!-- Dashboard Content -->
     <main class="dashboard-grid">
+        <!-- Summary -->
+        <section class="summary-section">
+            <h2 style="margin-bottom: 1rem; color: var(--text-primary);">Resumo da Última Execução</h2>
+            <div class="metrics-grid">
+                <div class="metric-card">
+                    <div class="metric-value" id="run-duration">--</div>
+                    <div class="metric-label">Duração da execução</div>
+                    <div class="metric-sublabel">Tempo de monitoramento</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value" id="page-size">--</div>
+                    <div class="metric-label">Tamanho da página</div>
+                    <div class="metric-sublabel">KB (última verificação)</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value" id="page-size-change">--</div>
+                    <div class="metric-label">Variação de tamanho</div>
+                    <div class="metric-sublabel">Desde a última execução</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value" id="incidents-24h">--</div>
+                    <div class="metric-label">Incidentes nas últimas 24h</div>
+                    <div class="metric-sublabel">Total (todas as services)</div>
+                </div>
+            </div>
+        </section>
+
         <!-- Service Status Cards -->
         <section class="service-grid">
             <!-- GitHub Pages Card -->
@@ -613,6 +640,11 @@
                 return;
             }
 
+            // Update Summary
+            if (data.summary) {
+                updateSummary(data.summary);
+            }
+
             // Update Global Status
             const globalStatus = document.getElementById('global-status');
             const githubStatus = data.services.github_pages.current_status;
@@ -627,10 +659,10 @@
             }
 
         // Update GitHub Pages
-        updateServiceCard('github-pages', data.services.github_pages);
+        updateServiceCard('github-pages', data.services.github_pages, data);
         
         // Update GitHub API
-        updateServiceCard('github-api', data.services.github_api);
+        updateServiceCard('github-api', data.services.github_api, data);
 
             // Update Incident Log
             updateIncidentLog(data.incident_log);
@@ -661,7 +693,35 @@
             return Math.round(sum / validLatencies.length);
         }
 
-        function updateServiceCard(prefix, serviceData) {
+        function updateSummary(summary) {
+            const runDurationEl = document.getElementById('run-duration');
+            const pageSizeEl = document.getElementById('page-size');
+            const pageSizeChangeEl = document.getElementById('page-size-change');
+            const incidentsEl = document.getElementById('incidents-24h');
+
+            if (runDurationEl && summary.run_duration_seconds != null) {
+                const secs = Number(summary.run_duration_seconds);
+                const minutes = Math.floor(secs / 60);
+                const seconds = Math.round(secs % 60);
+                runDurationEl.textContent = `${minutes}m ${seconds}s`;
+            }
+
+            if (pageSizeEl && summary.page_size && summary.page_size.current_kb) {
+                pageSizeEl.textContent = `${summary.page_size.current_kb} KB`;
+            }
+
+            if (pageSizeChangeEl && summary.page_size) {
+                const change = summary.page_size.percent_change;
+                pageSizeChangeEl.textContent = change ? `${change.toFixed(1)}%` : '0%';
+            }
+
+            if (incidentsEl && summary.incidents_last_24h) {
+                const total = Object.values(summary.incidents_last_24h).reduce((sum, v) => sum + (v || 0), 0);
+                incidentsEl.textContent = total;
+            }
+        }
+
+        function updateServiceCard(prefix, serviceData, data) {
             // Ensure DOM elements exist before manipulating them
             const statusEl = document.getElementById(`${prefix}-status`);
             const badgeEl = document.getElementById(`${prefix}-badge`);
@@ -681,15 +741,19 @@
                 }
             }
 
+            // Try to use the injected historical records (if available)
+            const historyKey = prefix.replace(/-/g, '_');
+            const serviceHistory = data && data.history && data.history[historyKey] ? data.history[historyKey] : [];
+
             // SLA Metrics
-            const sla24h = calculateSLA(serviceData.history);
-            const sla7d = calculateSLA(serviceData.history);
-            const sla30d = calculateSLA(serviceData.history);
+            const sla24h = calculateSLA(serviceHistory);
+            const sla7d = calculateSLA(serviceHistory);
+            const sla30d = calculateSLA(serviceHistory);
 
             const sla24El = document.getElementById(`${prefix}-sla-24h`);
             const sla7El = document.getElementById(`${prefix}-sla-7d`);
             const sla30El = document.getElementById(`${prefix}-sla-30d`);
-            const slaHasData = serviceData.history && serviceData.history.length > 0;
+            const slaHasData = serviceHistory && serviceHistory.length > 0;
 
             if (sla24El) sla24El.textContent = slaHasData ? `${sla24h}%` : 'No data';
             if (sla7El) sla7El.textContent = slaHasData ? `${sla7d}%` : 'No data';
@@ -697,11 +761,11 @@
 
             // Performance Metrics
             const latencyEl = document.getElementById(`${prefix}-latency`);
-            if (latencyEl) latencyEl.textContent = slaHasData ? `${calculateLatency(serviceData.history)}ms` : 'No data';
+            if (latencyEl) latencyEl.textContent = slaHasData ? `${calculateLatency(serviceHistory)}ms` : 'No data';
 
             // Performance breakdown metrics (if present)
             if (slaHasData) {
-                const validChecks = serviceData.history.filter(item => item.total_time_ms > 0);
+                const validChecks = serviceHistory.filter(item => item.total_time_ms > 0);
                 if (validChecks.length > 0) {
                     const avgDns = Math.round(validChecks.reduce((sum, item) => sum + item.dns_time_ms, 0) / validChecks.length);
                     const avgTcp = Math.round(validChecks.reduce((sum, item) => sum + item.tcp_time_ms, 0) / validChecks.length);

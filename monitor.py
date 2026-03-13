@@ -439,7 +439,7 @@ def generate_shields_badge(history):
     
     return badge_data
 
-def inject_data_into_html(history):
+def inject_data_into_html(history, summary=None):
     """Injeta os dados diretamente no script do index.html"""
     if not os.path.exists(INDEX_FILE):
         return False
@@ -454,7 +454,8 @@ def inject_data_into_html(history):
         "incident_log": generate_incident_log(history),
         "badge": generate_shields_badge(history),
         "history": history["services"],
-        "generated_at": datetime.datetime.now(datetime.timezone.utc).isoformat()
+        "generated_at": datetime.datetime.now(datetime.timezone.utc).isoformat(),
+        "summary": summary or {}
     }
     
     json_data = json.dumps(dashboard_data, indent=2)
@@ -503,10 +504,11 @@ def should_alert_services(history):
 def main():
     """Main SRE monitoring function"""
     print("Starting advanced SRE monitoring...")
-    
+    start_time = datetime.datetime.now(datetime.timezone.utc)
+
     # Load history
     history = load_history()
-    
+
     # Monitora cada serviço
     service_results = {}
     for service_key, service_config in SERVICES.items():
@@ -514,7 +516,7 @@ def main():
         record = check_service(service_key, service_config)
         add_record_to_history(history, service_key, record)
         service_results[service_key] = record
-        
+
         status_symbol = "+" if record["status"] == "ONLINE" else "-"
         latency_str = f"{record.get('total_time_ms', 0)}ms" if record["status"] == "ONLINE" else "N/A"
         print(f"  {status_symbol} {service_config['name']}: {record['status']} - {latency_str}")
@@ -526,6 +528,12 @@ def main():
     # Check page size
     print("Checking codepulse-monorepo page size...")
     current_size = check_page_size()
+    page_size_info = {
+        "current_kb": 0,
+        "previous_kb": 0,
+        "percent_change": 0
+    }
+
     if current_size > 0:
         history["page_size_history"].append({
             "timestamp": datetime.datetime.now(datetime.timezone.utc).isoformat(),
@@ -534,21 +542,40 @@ def main():
         # Keep only the last 30 page size records
         if len(history["page_size_history"]) > 30:
             history["page_size_history"] = history["page_size_history"][-30:]
-        
-        # Check for significant change
+
+        page_size_info["current_kb"] = current_size
         if len(history["page_size_history"]) > 1:
             previous_size = history["page_size_history"][-2]["size_kb"]
-            change_percent = abs(current_size - previous_size) / previous_size * 100
-            if change_percent > 20:  # Change > 20%
-                print(f"ALERT: Significant page size change detected: {previous_size}KB -> {current_size}KB ({change_percent:.1f}%)")
+            page_size_info["previous_kb"] = previous_size
+            page_size_info["percent_change"] = round(abs(current_size - previous_size) / previous_size * 100, 2) if previous_size else 0
+
+            if page_size_info["percent_change"] > 20:  # Change > 20%
+                print(f"ALERT: Significant page size change detected: {previous_size}KB -> {current_size}KB ({page_size_info['percent_change']:.1f}%)")
                 # Flag for special commit
                 os.environ["MONITOR_EXIT_CODE"] = "1"
     
     save_history(history)
-    
+
+    # Build a summary object for the dashboard
+    time_filters = get_time_filters()
+    summary = {
+        "run_duration_seconds": round((datetime.datetime.now(datetime.timezone.utc) - start_time).total_seconds(), 2),
+        "page_size": page_size_info,
+        "incidents_last_24h": {},
+        "avg_latency_last_24h": {}
+    }
+
+    for service_key in SERVICES.keys():
+        records = history["services"][service_key]
+        last_24h = [r for r in records if parse_timestamp(r["timestamp"]) >= time_filters["last_24h"]]
+        summary["incidents_last_24h"][service_key] = len([r for r in last_24h if r.get("status") != "ONLINE"])
+
+        perf = calculate_performance_metrics(records, time_filters["last_24h"])
+        summary["avg_latency_last_24h"][service_key] = perf.get("avg_latency", 0)
+
     # Inject data into HTML
     print("Updating observability dashboard...")
-    if inject_data_into_html(history):
+    if inject_data_into_html(history, summary):
         print("Dashboard updated successfully!")
     else:
         print("Failed to update dashboard")
