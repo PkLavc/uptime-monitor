@@ -6,6 +6,7 @@ import sys
 import socket
 import time
 import re
+import random
 from urllib.parse import urlparse
 
 GITHUB_TOKEN = os.environ.get("GITHUB_TOKEN")
@@ -124,6 +125,36 @@ def analyze_security_headers(response, service_config):
     return security_checks
 
 
+def is_service_healthy(status):
+    """Health classification layer for services.
+    
+    Returns True if service is considered healthy for monitoring purposes.
+    This helps eliminate false-positive incidents by treating DEGRADED as healthy.
+    """
+    return status in ["ONLINE", "DEGRADED"]
+
+def safe_request(url, headers=None, timeout=15, max_retries=3):
+    """HTTP request with retry and exponential backoff"""
+    session = requests.Session()
+    session.headers.update({'User-Agent': 'UptimeMonitor/1.0'})
+    if GITHUB_TOKEN:
+        session.headers.update({'Authorization': f'token {GITHUB_TOKEN}'})
+    
+    for attempt in range(max_retries):
+        try:
+            print(f"[INFO] Attempt {attempt + 1} for {url}")
+            response = session.get(url, timeout=timeout)
+            return response
+        except requests.exceptions.RequestException as e:
+            if attempt == max_retries - 1:
+                print(f"[ERROR] All {max_retries} attempts failed for {url}: {e}")
+                raise
+            delay = (2 ** attempt) + random.uniform(0, 1)
+            print(f"[WARN] Request failed attempt {attempt + 1}, retrying in {delay:.2f}s")
+            time.sleep(delay)
+    
+    return None
+
 def github_api_get(url, params=None):
     """Fetch JSON from GitHub API with optional auth token."""
     headers = {'User-Agent': 'UptimeMonitor/1.0'}
@@ -131,10 +162,11 @@ def github_api_get(url, params=None):
         headers['Authorization'] = f'token {GITHUB_TOKEN}'
 
     try:
-        resp = requests.get(url, headers=headers, timeout=10, params=params)
+        resp = safe_request(url, headers=headers, timeout=10, max_retries=3)
         if resp.status_code == 200:
             return resp.json()
-    except Exception:
+    except Exception as e:
+        print(f"[ERROR] GitHub API request failed: {e}")
         pass
     return None
 
@@ -151,18 +183,47 @@ def check_service(service_key, service_config):
         if GITHUB_TOKEN:
             headers['Authorization'] = f'token {GITHUB_TOKEN}'
 
-        response = requests.get(
+        response = safe_request(
             service_config["url"], 
-            timeout=10,
-            headers=headers
+            headers=headers,
+            timeout=15,
+            max_retries=3
         )
+        
+        if response is None:
+            print(f"[ERROR] Failed to get response for {service_config['name']}")
+            return {
+                "timestamp": timestamp,
+                "url": service_config["url"],
+                "status": "ERROR",
+                "http_code": 0,
+                "total_time_ms": 0,
+                "dns_time_ms": dns_time,
+                "tcp_time_ms": 0,
+                "transfer_time_ms": 0,
+                "content_ok": False,
+                "found_keywords": [],
+                "security_headers": {},
+                "error": "No response received",
+                "engagement": {}
+            }
+        
         total_time = (time.time() - start_total) * 1000
         
         tcp_time = measure_tcp_connection(service_config["url"])
-        transfer_time = total_time - dns_time - tcp_time
+        transfer_time = max(0, total_time - dns_time - tcp_time)  # Ensure non-negative
         
-        # Advanced checks
-        status = "ONLINE" if response.status_code == 200 else f"OFFLINE ({response.status_code})"
+        # Improved HTTP status handling - treat these as healthy
+        healthy_status_codes = [200, 204, 301, 302, 304]
+        if response.status_code in healthy_status_codes:
+            status = "ONLINE"
+        else:
+            status = f"OFFLINE ({response.status_code})"
+        
+        # Handle GitHub API rate limiting
+        if response.status_code == 403 and 'X-RateLimit-Remaining' in response.headers:
+            status = "DEGRADED"
+            print(f"[WARN] GitHub API rate limited for {service_config['name']}")
         
         # Deep health check for websites
         content_ok = True
@@ -175,24 +236,30 @@ def check_service(service_key, service_config):
             )
             if not content_ok:
                 status = "CONTENT_ERROR"
+            elif total_time > 2000:  # Latency > 2000ms
+                status = "DEGRADED"
 
             # Basic HTML structure metrics
             html = response.text
-            record["html_size_kb"] = round(len(response.content) / 1024, 2)
-            record["num_images"] = len(re.findall(r'<img\b', html, re.I))
-            record["num_links"] = len(re.findall(r'<a\b', html, re.I))
-            record["num_scripts"] = len(re.findall(r'<script\b', html, re.I))
-            record["num_stylesheets"] = len(re.findall(r"<link[^>]+rel=['\"]stylesheet['\"]", html, re.I))
+            html_size_kb = round(len(response.content) / 1024, 2)
+            num_images = len(re.findall(r'<img\b', html, re.I))
+            num_links = len(re.findall(r'<a\b', html, re.I))
+            num_scripts = len(re.findall(r'<script\b', html, re.I))
+            num_stylesheets = len(re.findall(r"<link[^>]+rel=['\"]stylesheet['\"]", html, re.I))
 
             title_match = re.search(r'<title>(.*?)</title>', html, re.I | re.S)
-            record["page_title"] = title_match.group(1).strip() if title_match else None
+            page_title = title_match.group(1).strip() if title_match else None
 
             meta_desc = re.search(r"<meta\s+name=['\"]description['\"]\s+content=['\"](.*?)['\"]", html, re.I)
-            record["meta_description"] = meta_desc.group(1).strip() if meta_desc else None
+            meta_description = meta_desc.group(1).strip() if meta_desc else None
 
-        # Security analysis
-        if response.status_code == 200:
+        # Security analysis with additional headers
+        if response.status_code in healthy_status_codes:
             security_headers = analyze_security_headers(response, service_config)
+            # Additional security headers check
+            additional_headers = ["content-security-policy", "x-frame-options", "referrer-policy"]
+            for header in additional_headers:
+                security_headers[header] = header.lower() in response.headers
         
         record = {
             "timestamp": timestamp,
@@ -209,17 +276,17 @@ def check_service(service_key, service_config):
             "engagement": {},  # For GitHub API
 
             # Website insights
-            "html_size_kb": 0,
-            "num_images": 0,
-            "num_links": 0,
-            "num_scripts": 0,
-            "num_stylesheets": 0,
-            "page_title": None,
-            "meta_description": None
+            "html_size_kb": html_size_kb if service_config["type"] == "website" else 0,
+            "num_images": num_images if service_config["type"] == "website" else 0,
+            "num_links": num_links if service_config["type"] == "website" else 0,
+            "num_scripts": num_scripts if service_config["type"] == "website" else 0,
+            "num_stylesheets": num_stylesheets if service_config["type"] == "website" else 0,
+            "page_title": page_title if service_config["type"] == "website" else None,
+            "meta_description": meta_description if service_config["type"] == "website" else None
         }
         
         # Extract engagement and repo activity data for CodePulse API
-        if service_key == "github_api" and response.status_code == 200:
+        if service_key == "github_api" and response.status_code in healthy_status_codes:
             try:
                 data = response.json()
                 record["engagement"] = {
@@ -258,10 +325,46 @@ def check_service(service_key, service_config):
                         record["last_commit_date"] = last_commit[0].get("commit", {}).get("committer", {}).get("date")
                     else:
                         record["last_commit_date"] = None
-            except Exception:
+            except Exception as e:
+                print(f"[ERROR] Failed to extract GitHub API data: {e}")
                 pass
         
+    except requests.exceptions.ConnectTimeout:
+        print(f"[WARN] Connection timeout for {service_config['name']}")
+        record = {
+            "timestamp": timestamp,
+            "url": service_config["url"],
+            "status": "DEGRADED",
+            "http_code": 0,
+            "total_time_ms": 0,
+            "dns_time_ms": dns_time,
+            "tcp_time_ms": 0,
+            "transfer_time_ms": 0,
+            "content_ok": False,
+            "found_keywords": [],
+            "security_headers": {},
+            "error": "Connection timeout",
+            "engagement": {}
+        }
+    except requests.exceptions.ReadTimeout:
+        print(f"[WARN] Read timeout for {service_config['name']}")
+        record = {
+            "timestamp": timestamp,
+            "url": service_config["url"],
+            "status": "DEGRADED",
+            "http_code": 0,
+            "total_time_ms": 0,
+            "dns_time_ms": dns_time,
+            "tcp_time_ms": 0,
+            "transfer_time_ms": 0,
+            "content_ok": False,
+            "found_keywords": [],
+            "security_headers": {},
+            "error": "Read timeout",
+            "engagement": {}
+        }
     except Exception as e:
+        print(f"[ERROR] Service check failed for {service_config['name']}: {e}")
         record = {
             "timestamp": timestamp,
             "url": service_config["url"],
@@ -313,7 +416,7 @@ def cleanup_old_records(history):
             print(f"Cleanup: Removed {removed_count} old records for service {service_key}")
 
 def calculate_uptime_percentage(records, time_filter=None):
-    """Calculate uptime percentage for a set of records"""
+    """Calculate uptime percentage for a set of records using health classification"""
     if not records:
         return 0
     
@@ -326,11 +429,12 @@ def calculate_uptime_percentage(records, time_filter=None):
     if not filtered_records:
         return 0
     
-    online_records = [r for r in filtered_records if r.get("status") == "ONLINE"]
-    return (len(online_records) / len(filtered_records)) * 100
+    # Use health classification to count healthy services (ONLINE + DEGRADED)
+    healthy_records = [r for r in filtered_records if is_service_healthy(r.get("status", ""))]
+    return (len(healthy_records) / len(filtered_records)) * 100
 
 def calculate_performance_metrics(records, time_filter=None):
-    """Calculate detailed performance metrics"""
+    """Calculate detailed performance metrics using health classification"""
     if not records:
         return {
             "avg_latency": 0,
@@ -348,9 +452,10 @@ def calculate_performance_metrics(records, time_filter=None):
     else:
         filtered_records = records
     
-    online_records = [r for r in filtered_records if r.get("status") == "ONLINE" and r.get("total_time_ms", 0) > 0]
+    # Use health classification to include both ONLINE and DEGRADED services
+    healthy_records = [r for r in filtered_records if is_service_healthy(r.get("status", "")) and r.get("total_time_ms", 0) > 0]
     
-    if not online_records:
+    if not healthy_records:
         return {
             "avg_latency": 0,
             "avg_dns_time": 0,
@@ -362,13 +467,13 @@ def calculate_performance_metrics(records, time_filter=None):
         }
     
     # Latency calculations
-    latencies = [r["total_time_ms"] for r in online_records]
-    dns_times = [r["dns_time_ms"] for r in online_records if r.get("dns_time_ms", 0) > 0]
-    tcp_times = [r["tcp_time_ms"] for r in online_records if r.get("tcp_time_ms", 0) > 0]
-    transfer_times = [r["transfer_time_ms"] for r in online_records if r.get("transfer_time_ms", 0) > 0]
+    latencies = [r["total_time_ms"] for r in healthy_records]
+    dns_times = [r["dns_time_ms"] for r in healthy_records if r.get("dns_time_ms", 0) > 0]
+    tcp_times = [r["tcp_time_ms"] for r in healthy_records if r.get("tcp_time_ms", 0) > 0]
+    transfer_times = [r["transfer_time_ms"] for r in healthy_records if r.get("transfer_time_ms", 0) > 0]
     
     # Peak hour (highest latency)
-    peak_record = max(online_records, key=lambda x: x["total_time_ms"])
+    peak_record = max(healthy_records, key=lambda x: x["total_time_ms"])
     peak_hour = parse_timestamp(peak_record["timestamp"]).strftime("%H:%M")
     
     return {
@@ -452,7 +557,7 @@ def process_service_data(history, service_key):
     }
 
 def generate_incident_log(history):
-    """Generate incident log from history"""
+    """Generate incident log from history - only log truly unhealthy services"""
     incidents = []
     
     for service_key in SERVICES.keys():
@@ -466,7 +571,8 @@ def generate_incident_log(history):
             status = record["status"]
             timestamp = record["timestamp"]
             
-            if status != "ONLINE" and current_incident is None:
+            # Only start incident for truly unhealthy services (not DEGRADED)
+            if not is_service_healthy(status) and current_incident is None:
                 # Start of incident
                 current_incident = {
                     "service": service_key,
@@ -475,7 +581,7 @@ def generate_incident_log(history):
                     "status": status,
                     "duration": "Em andamento"
                 }
-            elif status == "ONLINE" and current_incident is not None:
+            elif is_service_healthy(status) and current_incident is not None:
                 # End of incident
                 current_incident["end_time"] = timestamp
                 start_dt = parse_timestamp(current_incident["start_time"])
@@ -647,7 +753,7 @@ def main():
         summary["incidents_last_24h"][service_key] = len([r for r in last_24h if r.get("status") != "ONLINE"])
 
         perf = calculate_performance_metrics(records, time_filters["last_24h"])
-        summary["avg_latency_last_24h"][service_key] = perf.get("avg_latency", 0)
+        summary["avg_latency_last_24h"][service_key] = int(perf.get("avg_latency", 0)) if perf.get("avg_latency", 0) else 0
 
     # Inject data into HTML
     print("Updating observability dashboard...")
