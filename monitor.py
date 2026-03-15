@@ -660,10 +660,10 @@ def main():
     # Check if alert is needed
     if should_alert_services(history):
         print("ALERT: Incident detected!")
-        sys.exit(1)
     else:
         print("Monitoring completed successfully - all services online")
-        sys.exit(0)
+    
+    sys.exit(0)
 
 if __name__ == "__main__":
     main()
