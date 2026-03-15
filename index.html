@@ -1263,41 +1263,37 @@
   "services": {
     "github_pages": {
       "current_status": "ONLINE",
-      "sla_24h": 50.0,
-      "sla_7d": 92.0,
-      "sla_30d": 92.0,
+      "sla_24h": 66.67,
+      "sla_7d": 92.31,
+      "sla_30d": 92.31,
       "performance": {
-        "avg_latency": 70.0,
-        "avg_dns_time": 11.84,
-        "avg_tcp_time": 5.72,
-        "avg_transfer_time": 52.44,
-        "peak_hour": "13:49",
-        "slowest_response": 70.0,
+        "avg_latency": 81.25,
+        "avg_dns_time": 15.67,
+        "avg_tcp_time": 3.89,
+        "avg_transfer_time": 61.69,
+        "peak_hour": "14:35",
+        "slowest_response": 92.49,
         "fastest_response": 70.0
       },
-      "last_check": "2026-03-15T13:49:25.656635+00:00",
+      "last_check": "2026-03-15T14:35:30.925620+00:00",
       "engagement": {}
     },
     "github_api": {
-      "current_status": "ONLINE",
+      "current_status": "DEGRADED",
       "sla_24h": 100.0,
-      "sla_7d": 96.0,
-      "sla_30d": 96.0,
+      "sla_7d": 96.15,
+      "sla_30d": 96.15,
       "performance": {
-        "avg_latency": 133.44,
-        "avg_dns_time": 2.37,
-        "avg_tcp_time": 14.5,
-        "avg_transfer_time": 116.57,
+        "avg_latency": 114.6,
+        "avg_dns_time": 2.27,
+        "avg_tcp_time": 15.02,
+        "avg_transfer_time": 97.31,
         "peak_hour": "13:14",
         "slowest_response": 142.13,
-        "fastest_response": 124.75
+        "fastest_response": 76.93
       },
-      "last_check": "2026-03-15T13:49:25.747130+00:00",
-      "engagement": {
-        "stars": 5,
-        "forks": 0,
-        "open_issues": 0
-      }
+      "last_check": "2026-03-15T14:35:31.043394+00:00",
+      "engagement": {}
     }
   },
   "incident_log": [
@@ -1326,7 +1322,7 @@
   "badge": {
     "schemaVersion": 1,
     "label": "Uptime",
-    "message": "50.0%",
+    "message": "66.7%",
     "color": "red"
   },
   "history": {
@@ -1832,6 +1828,37 @@
         "dns_time_ms": 11.84,
         "tcp_time_ms": 5.72,
         "transfer_time_ms": 52.44,
+        "content_ok": true,
+        "found_keywords": [
+          "PkLavc",
+          "Patrick",
+          "Software Engineer"
+        ],
+        "security_headers": {
+          "strict-transport-security": true,
+          "x-content-type-options": false,
+          "content-security-policy": false,
+          "x-frame-options": false,
+          "referrer-policy": false
+        },
+        "engagement": {},
+        "html_size_kb": 7.34,
+        "num_images": 8,
+        "num_links": 6,
+        "num_scripts": 7,
+        "num_stylesheets": 3,
+        "page_title": "Patrick Araujo | Software Engineer & Data Architect | AI Engineering",
+        "meta_description": "Software Engineer and Data Architect specializing in Backend Systems, AI Workflows, and Data Pipelines. Architecting scalable solutions with Python, AI, and Distributed Systems."
+      },
+      {
+        "timestamp": "2026-03-15T14:35:30.925620+00:00",
+        "url": "https://pklavc.github.io/",
+        "status": "ONLINE",
+        "http_code": 200,
+        "total_time_ms": 92.49,
+        "dns_time_ms": 19.5,
+        "tcp_time_ms": 2.06,
+        "transfer_time_ms": 70.93,
         "content_ok": true,
         "found_keywords": [
           "PkLavc",
@@ -3076,6 +3103,27 @@
         ],
         "commits_last_30d": 75,
         "last_commit_date": "2026-03-13T13:56:46Z"
+      },
+      {
+        "timestamp": "2026-03-15T14:35:31.043394+00:00",
+        "url": "https://api.github.com/repos/PkLavc/codepulse-monorepo",
+        "status": "DEGRADED",
+        "http_code": 403,
+        "total_time_ms": 76.93,
+        "dns_time_ms": 2.08,
+        "tcp_time_ms": 16.08,
+        "transfer_time_ms": 58.77,
+        "content_ok": true,
+        "found_keywords": [],
+        "security_headers": {},
+        "engagement": {},
+        "html_size_kb": 0,
+        "num_images": 0,
+        "num_links": 0,
+        "num_scripts": 0,
+        "num_stylesheets": 0,
+        "page_title": null,
+        "meta_description": null
       }
     ]
   },
@@ -3179,11 +3227,15 @@
     {
       "timestamp": "2026-03-15T13:49:26.286109+00:00",
       "size_kb": 22.97
+    },
+    {
+      "timestamp": "2026-03-15T14:35:31.228195+00:00",
+      "size_kb": 22.97
     }
   ],
-  "generated_at": "2026-03-15T13:49:26.288809+00:00",
+  "generated_at": "2026-03-15T14:35:31.230907+00:00",
   "summary": {
-    "run_duration_seconds": 0.63,
+    "run_duration_seconds": 0.31,
     "page_size": {
       "current_kb": 22.97,
       "previous_kb": 22.97,
@@ -3191,11 +3243,11 @@
     },
     "incidents_last_24h": {
       "github_pages": 1,
-      "github_api": 0
+      "github_api": 1
     },
     "avg_latency_last_24h": {
-      "github_pages": 70,
-      "github_api": 133
+      "github_pages": 81,
+      "github_api": 114
     }
   }
 };</script>
