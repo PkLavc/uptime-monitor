@@ -18,8 +18,8 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0  # Required for git diff
-        
+          fetch-depth: 0
+
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
@@ -51,34 +51,30 @@ jobs:
           git config user.name "PkLavc"
           git config user.email "patrickajm@gmail.com"
           
-          BRANCH="sre-dashboard-$(date +%Y%m%d-%H%M%S)"
-          git checkout -b $BRANCH
+          # Define a branch name once and store it in GITHUB_ENV
+          NEW_BRANCH="sre-dashboard-$(date +%Y%m%d-%H%M%S)"
+          echo "SRE_BRANCH=$NEW_BRANCH" >> $GITHUB_ENV
           
+          git checkout -b $NEW_BRANCH
           git add .
           
-          # Choose commit message based on results
           if [ "${MONITOR_EXIT_CODE:-0}" -eq 1 ]; then
             git commit -m "alert: performance degradation detected" -m "Co-authored-by: BabaYaga-RU <p201952589703@gmail.com>"
           else
             git commit -m "stats: update uptime dashboard metrics" -m "Co-authored-by: BabaYaga-RU <p201952589703@gmail.com>"
           fi
           
-          # Ensure branch is up to date before pushing
           git fetch origin
           git rebase origin/main
-          
-          git push origin $BRANCH --force
+          git push origin $NEW_BRANCH --force
           
       - name: Create and merge PR
         if: steps.changes.outputs.CHANGES == 'true'
         env:
           GH_TOKEN: ${{ secrets.PAT_SHARK }}
         run: |
-          BRANCH="sre-dashboard-$(date +%Y%m%d-%H%M%S)"
+          echo "Creating PR for branch: ${{ env.SRE_BRANCH }}"
           
-          echo "Creating PR..."
-          
-          # Determine the PR title based on status
           if [ "${MONITOR_EXIT_CODE:-0}" -eq 1 ]; then
             PR_TITLE="🔴 SRE Dashboard: Performance Degradation Detected - $(date +'%Y-%m-%d %H:%M')"
           else
@@ -106,7 +102,7 @@ jobs:
           - Deep health checks
 
           **Dashboard:** [index.html](./index.html)" \
-                               --base main --head $BRANCH --fill)
+                               --base main --head ${{ env.SRE_BRANCH }})
           
           echo "Merging PR: $PR_URL"
           gh pr merge "$PR_URL" --merge --delete-branch --admin
