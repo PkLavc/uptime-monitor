@@ -53,30 +53,33 @@ git push origin $BRANCH --force
 
 # Create and merge PR with professional metadata
 if [ "${MONITOR_EXIT_CODE:-0}" -eq 1 ]; then
-    PR_TITLE="🔴 SRE Dashboard: Performance Degradation Detected - $(date +'%Y-%m-%d %H:%M')"
+    PR_TITLE="🔴 Inteligência GTA VI: Atualização Detectada - $(date +'%Y-%m-%d %H:%M')"
 else
-    PR_TITLE="🟢 SRE Dashboard: All Systems Operational - $(date +'%Y-%m-%d %H:%M')"
+    PR_TITLE="🟢 Vigilância Rockstar: Sistema Monitorado - $(date +'%Y-%m-%d %H:%M')"
 fi
 
 PR_URL=$(gh pr create --title "$PR_TITLE" \
-                      --body "Automated SRE observability dashboard update and metrics synchronization.
+                      --body "Atualização automática de monitoramento de inteligência em tempo real sobre GTA VI.
 
-**Changes:**
-- Updated uptime metrics in history.json
-- Refreshed SRE dashboard visualizations in index.html
-- Generated new SLA metrics and performance data
-- Updated Shields.io badge with current uptime percentage
+**Mudanças:**
+- Histórico de vigilância atualizado em history.json
+- Visualizações do dashboard atualizadas em index.html
+- Novos dados de detecção de atualização e análise de conteúdo
+- Badge de status atualizado com dados mais recentes
 
-**Services Monitored:**
-- GitHub Pages (https://pklavc.github.io/)
-- GitHub API (api.github.com/repos/PkLavc/codepulse-monorepo)
+**Serviços Monitorados:**
+- GTA VI Official (https://www.rockstargames.com/VI/)
+- Rockstar Newswire (https://www.rockstargames.com/br/newswire)
+- PlayStation Store (https://www.playstation.com/pt-br/games/grand-theft-auto-vi/)
+- Xbox Store (https://www.xbox.com/pt-PT/games/store/grand-theft-auto-vi/)
 
-**Observability Features:**
-- SLA calculations (24h, 7d, 30d)
-- Performance metrics (DNS, TCP, Transfer times)
-- Incident log tracking
-- Security headers analysis
-- Deep health checks
+**Recursos de Inteligência:**
+- Detecção de atualizações por SHA-256
+- Análise de tamanho de conteúdo em tempo real
+- Métricas de disponibilidade (24h, 7d, 30d)
+- Análise de latência (DNS, TCP, Transfer)
+- Histórico de incidentes
+- Verificação de headers de segurança
 
 **Dashboard:** [index.html](./index.html)" \
                       --base main --head $BRANCH --fill)

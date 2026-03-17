@@ -7,24 +7,39 @@ import socket
 import time
 import re
 import random
+import hashlib
 from urllib.parse import urlparse
 
 GITHUB_TOKEN = os.environ.get("GITHUB_TOKEN")
 
-# Advanced configuration
+# GTA VI Real-Time Intelligence Monitoring
 SERVICES = {
-    "github_pages": {
-        "url": "https://pklavc.github.io/",
-        "name": "GitHub Pages",
+    "gta_vi_official": {
+        "url": "https://www.rockstargames.com/VI/",
+        "name": "GTA VI Official",
         "type": "website",
-        "keywords": ["PkLavc", "Patrick", "Software Engineer"],
+        "keywords": ["Grand Theft Auto", "GTA VI", "Rockstar"],
         "security_headers": ["strict-transport-security", "x-content-type-options"]
     },
-    "github_api": {
-        "url": "https://api.github.com/repos/PkLavc/codepulse-monorepo",
-        "name": "GitHub API",
-        "type": "api",
-        "keywords": ["codepulse-monorepo"],
+    "rockstar_newswire": {
+        "url": "https://www.rockstargames.com/br/newswire",
+        "name": "Rockstar Newswire",
+        "type": "website",
+        "keywords": ["Rockstar", "News", "GTA"],
+        "security_headers": ["strict-transport-security", "x-content-type-options"]
+    },
+    "playstation_store": {
+        "url": "https://www.playstation.com/pt-br/games/grand-theft-auto-vi/",
+        "name": "PlayStation Store - GTA VI",
+        "type": "website",
+        "keywords": ["Grand Theft Auto", "GTA VI", "PlayStation"],
+        "security_headers": ["strict-transport-security", "x-content-type-options"]
+    },
+    "xbox_store": {
+        "url": "https://www.xbox.com/pt-PT/games/store/grand-theft-auto-vi/9NL3WWNZLZZN",
+        "name": "Xbox Store - GTA VI",
+        "type": "website",
+        "keywords": ["Grand Theft Auto", "GTA VI", "Xbox"],
         "security_headers": ["strict-transport-security", "x-content-type-options"]
     }
 }
@@ -124,6 +139,30 @@ def analyze_security_headers(response, service_config):
         
     return security_checks
 
+def calculate_content_hash(content):
+    """Calculate SHA-256 hash of HTML content"""
+    try:
+        if isinstance(content, str):
+            content = content.encode('utf-8')
+        return hashlib.sha256(content).hexdigest()
+    except Exception:
+        return None
+
+def detect_intelligence_update(history, service_key, new_hash):
+    """Detect if content hash changed - indicates Intelligence Update"""
+    records = history["services"].get(service_key, [])
+    
+    if not records:
+        return False, None
+    
+    # Get the last record's hash if it exists
+    last_record = records[-1]
+    previous_hash = last_record.get("content_hash")
+    
+    if previous_hash and previous_hash != new_hash:
+        return True, f"Hash changed: {previous_hash[:8]}... → {new_hash[:8]}..."
+    
+    return False, None
 
 def is_service_healthy(status):
     """Health classification layer for services.
@@ -131,7 +170,7 @@ def is_service_healthy(status):
     Returns True if service is considered healthy for monitoring purposes.
     This helps eliminate false-positive incidents by treating DEGRADED as healthy.
     """
-    return status in ["ONLINE", "DEGRADED"]
+    return status in ["ONLINE", "DEGRADED", "INTELLIGENCE_UPDATE"]
 
 def safe_request(url, headers=None, timeout=15, max_retries=3):
     """HTTP request with retry and exponential backoff"""
@@ -153,21 +192,6 @@ def safe_request(url, headers=None, timeout=15, max_retries=3):
             print(f"[WARN] Request failed attempt {attempt + 1}, retrying in {delay:.2f}s")
             time.sleep(delay)
     
-    return None
-
-def github_api_get(url, params=None):
-    """Fetch JSON from GitHub API with optional auth token."""
-    headers = {'User-Agent': 'UptimeMonitor/1.0'}
-    if GITHUB_TOKEN:
-        headers['Authorization'] = f'token {GITHUB_TOKEN}'
-
-    try:
-        resp = safe_request(url, headers=headers, timeout=10, max_retries=3)
-        if resp.status_code == 200:
-            return resp.json()
-    except Exception as e:
-        print(f"[ERROR] GitHub API request failed: {e}")
-        pass
     return None
 
 def check_service(service_key, service_config):
@@ -229,6 +253,9 @@ def check_service(service_key, service_config):
         content_ok = True
         found_keywords = []
         security_headers = {}
+        content_hash = None
+        html_size_kb = 0
+        intelligence_update = False
         
         if service_config["type"] == "website":
             content_ok, found_keywords = deep_health_check(
@@ -239,18 +266,27 @@ def check_service(service_key, service_config):
             elif total_time > 2000:  # Latency > 2000ms
                 status = "DEGRADED"
 
-            # Basic HTML structure metrics
-            html = response.text
-            html_size_kb = round(len(response.content) / 1024, 2)
-            num_images = len(re.findall(r'<img\b', html, re.I))
-            num_links = len(re.findall(r'<a\b', html, re.I))
-            num_scripts = len(re.findall(r'<script\b', html, re.I))
-            num_stylesheets = len(re.findall(r"<link[^>]+rel=['\"]stylesheet['\"]", html, re.I))
+            # Calculate content hash and detect intelligence updates
+            content_hash = calculate_content_hash(response.content)
+            
+            # Check for intelligence updates
+            is_update, update_msg = detect_intelligence_update(history, service_key, content_hash)
+            if is_update:
+                intelligence_update = True
+                status = "INTELLIGENCE_UPDATE"
+                print(f"[ALERT] Intelligence Update on {service_config['name']}: {update_msg}")
 
-            title_match = re.search(r'<title>(.*?)</title>', html, re.I | re.S)
+            # HTML size analysis
+            html_size_kb = round(len(response.content) / 1024, 2)
+            num_images = len(re.findall(r'<img\b', response.text, re.I))
+            num_links = len(re.findall(r'<a\b', response.text, re.I))
+            num_scripts = len(re.findall(r'<script\b', response.text, re.I))
+            num_stylesheets = len(re.findall(r"<link[^>]+rel=['\"]stylesheet['\"]", response.text, re.I))
+
+            title_match = re.search(r'<title>(.*?)</title>', response.text, re.I | re.S)
             page_title = title_match.group(1).strip() if title_match else None
 
-            meta_desc = re.search(r"<meta\s+name=['\"]description['\"]\s+content=['\"](.*?)['\"]", html, re.I)
+            meta_desc = re.search(r"<meta\s+name=['\"]description['\"]\s+content=['\"](.*?)['\"]", response.text, re.I)
             meta_description = meta_desc.group(1).strip() if meta_desc else None
 
         # Security analysis with additional headers
@@ -273,9 +309,9 @@ def check_service(service_key, service_config):
             "content_ok": content_ok,
             "found_keywords": found_keywords,
             "security_headers": security_headers,
-            "engagement": {},  # For GitHub API
-
-            # Website insights
+            "engagement": {},  # For GitHub API compatibility
+            "content_hash": content_hash,
+            "intelligence_update": intelligence_update,
             "html_size_kb": html_size_kb if service_config["type"] == "website" else 0,
             "num_images": num_images if service_config["type"] == "website" else 0,
             "num_links": num_links if service_config["type"] == "website" else 0,
@@ -284,50 +320,6 @@ def check_service(service_key, service_config):
             "page_title": page_title if service_config["type"] == "website" else None,
             "meta_description": meta_description if service_config["type"] == "website" else None
         }
-        
-        # Extract engagement and repo activity data for CodePulse API
-        if service_key == "github_api" and response.status_code in healthy_status_codes:
-            try:
-                data = response.json()
-                record["engagement"] = {
-                    "stars": data.get("stargazers_count", 0),
-                    "forks": data.get("forks_count", 0),
-                    "open_issues": data.get("open_issues_count", 0)
-                }
-
-                # Repo activity metrics
-                owner_repo = None
-                match = re.search(r"/repos/([^/]+/[^/]+)", service_config["url"])
-                if match:
-                    owner_repo = match.group(1)
-
-                if owner_repo:
-                    # Open PRs count (search endpoint)
-                    pr_search = github_api_get(
-                        f"https://api.github.com/search/issues",
-                        params={"q": f"repo:{owner_repo} type:pr state:open"}
-                    )
-                    record["open_prs"] = pr_search.get("total_count", 0) if pr_search else 0
-
-                    # Recent commits (commit activity)
-                    commit_activity = github_api_get(f"https://api.github.com/repos/{owner_repo}/stats/commit_activity")
-                    if isinstance(commit_activity, list) and len(commit_activity) > 0:
-                        # GitHub returns last 52 weeks of activity
-                        record["commit_activity"] = commit_activity
-                        record["commits_last_30d"] = sum(w.get("total", 0) for w in commit_activity[-4:])
-                    else:
-                        record["commit_activity"] = []
-                        record["commits_last_30d"] = 0
-
-                    # Last commit timestamp
-                    last_commit = github_api_get(f"https://api.github.com/repos/{owner_repo}/commits", params={"per_page": 1})
-                    if isinstance(last_commit, list) and len(last_commit) > 0:
-                        record["last_commit_date"] = last_commit[0].get("commit", {}).get("committer", {}).get("date")
-                    else:
-                        record["last_commit_date"] = None
-            except Exception as e:
-                print(f"[ERROR] Failed to extract GitHub API data: {e}")
-                pass
         
     except requests.exceptions.ConnectTimeout:
         print(f"[WARN] Connection timeout for {service_config['name']}")
@@ -659,17 +651,6 @@ def inject_data_into_html(history, summary=None):
         f.write(new_content)
     return True
 
-def check_page_size(url="https://pklavc.github.io/codepulse-monorepo/"):
-    """Check codepulse-monorepo page size"""
-    try:
-        response = requests.get(url, timeout=10)
-        if response.status_code == 200:
-            size_kb = len(response.content) / 1024
-            return round(size_kb, 2)
-        return 0
-    except Exception:
-        return 0
-
 def should_alert_services(history):
     """Check if any service is experiencing problems"""
     for service_key in SERVICES.keys():
@@ -707,50 +688,30 @@ def main():
     print("Performing old record cleanup...")
     cleanup_old_records(history)
     
-    # Check page size
-    print("Checking codepulse-monorepo page size...")
-    current_size = check_page_size()
-    page_size_info = {
-        "current_kb": 0,
-        "previous_kb": 0,
-        "percent_change": 0
-    }
-
-    if current_size > 0:
-        history["page_size_history"].append({
-            "timestamp": datetime.datetime.now(datetime.timezone.utc).isoformat(),
-            "size_kb": current_size
-        })
-        # Keep only the last 30 page size records
-        if len(history["page_size_history"]) > 30:
-            history["page_size_history"] = history["page_size_history"][-30:]
-
-        page_size_info["current_kb"] = current_size
-        if len(history["page_size_history"]) > 1:
-            previous_size = history["page_size_history"][-2]["size_kb"]
-            page_size_info["previous_kb"] = previous_size
-            page_size_info["percent_change"] = round(abs(current_size - previous_size) / previous_size * 100, 2) if previous_size else 0
-
-            if page_size_info["percent_change"] > 20:  # Change > 20%
-                print(f"ALERT: Significant page size change detected: {previous_size}KB -> {current_size}KB ({page_size_info['percent_change']:.1f}%)")
-                # Flag for special commit
-                os.environ["MONITOR_EXIT_CODE"] = "1"
-    
     save_history(history)
 
     # Build a summary object for the dashboard
     time_filters = get_time_filters()
     summary = {
         "run_duration_seconds": round((datetime.datetime.now(datetime.timezone.utc) - start_time).total_seconds(), 2),
-        "page_size": page_size_info,
         "incidents_last_24h": {},
-        "avg_latency_last_24h": {}
+        "avg_latency_last_24h": {},
+        "intelligence_updates": []
     }
 
     for service_key in SERVICES.keys():
         records = history["services"][service_key]
         last_24h = [r for r in records if parse_timestamp(r["timestamp"]) >= time_filters["last_24h"]]
-        summary["incidents_last_24h"][service_key] = len([r for r in last_24h if r.get("status") != "ONLINE"])
+        summary["incidents_last_24h"][service_key] = len([r for r in last_24h if r.get("status") not in ["ONLINE", "INTELLIGENCE_UPDATE"]])
+        
+        # Track intelligence updates
+        intelligence_updates = [r for r in last_24h if r.get("intelligence_update", False)]
+        if intelligence_updates:
+            summary["intelligence_updates"].append({
+                "service": service_key,
+                "count": len(intelligence_updates),
+                "latest": intelligence_updates[-1]["timestamp"]
+            })
 
         perf = calculate_performance_metrics(records, time_filters["last_24h"])
         summary["avg_latency_last_24h"][service_key] = int(perf.get("avg_latency", 0)) if perf.get("avg_latency", 0) else 0
@@ -764,8 +725,8 @@ def main():
         sys.exit(1)
     
     # Check if alert is needed
-    if should_alert_services(history):
-        print("ALERT: Incident detected!")
+    if should_alert_services(history) or summary.get("intelligence_updates", []):
+        print("ALERT: Incident or Intelligence Update detected!")
     else:
         print("Monitoring completed successfully - all services online")
     
