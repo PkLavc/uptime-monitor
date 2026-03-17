@@ -664,6 +664,34 @@ def inject_data_into_html(history, summary=None):
         f.write(new_content)
     return True
 
+def save_dashboard_data_to_json(history, summary=None):
+    """Save dashboard data to a separate JSON file for static hosting"""
+    # Processa os dados exatamente como o script.js espera
+    processed_data = {}
+    for service_key in SERVICES.keys():
+        processed_data[service_key] = process_service_data(history, service_key)
+    
+    dashboard_data = {
+        "services": processed_data,
+        "incident_log": generate_incident_log(history),
+        "badge": generate_shields_badge(history),
+        "history": history["services"],
+        "page_size_history": history.get("page_size_history", []),
+        "generated_at": datetime.datetime.now(datetime.timezone.utc).isoformat(),
+        "summary": summary or {}
+    }
+    
+    # Save to data/dashboard-data.json
+    data_file_path = "data/dashboard-data.json"
+    try:
+        with open(data_file_path, 'w', encoding='utf-8') as f:
+            json.dump(dashboard_data, f, indent=2, ensure_ascii=False)
+        print(f"Dashboard data saved to {data_file_path}")
+        return True
+    except Exception as e:
+        print(f"ERROR: Failed to save dashboard data to JSON: {e}")
+        return False
+
 def should_alert_services(history):
     """Check if any service is experiencing problems"""
     for service_key in SERVICES.keys():
@@ -767,7 +795,19 @@ def main():
             summary["incidents_last_24h"][service_key] = 0
             summary["avg_latency_last_24h"][service_key] = 0
 
-    # Inject data into HTML
+    # Save data to JSON file for static hosting
+    print("Saving dashboard data to JSON file...")
+    try:
+        if save_dashboard_data_to_json(history, summary):
+            print("Dashboard data saved to JSON successfully!")
+        else:
+            print("Failed to save dashboard data to JSON")
+            sys.exit(1)
+    except Exception as e:
+        print(f"ERROR: Failed to save dashboard data to JSON: {e}")
+        sys.exit(1)
+    
+    # Inject data into HTML (for backward compatibility)
     print("Updating observability dashboard...")
     try:
         if inject_data_into_html(history, summary):

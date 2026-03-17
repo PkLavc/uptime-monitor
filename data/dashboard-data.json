@@ -1,5 +1,97 @@
 {
   "services": {
+    "gta_vi_official": {
+      "current_status": "ONLINE",
+      "sla_24h": 100.0,
+      "sla_7d": 100.0,
+      "sla_30d": 100.0,
+      "performance": {
+        "avg_latency": 620.09,
+        "avg_dns_time": 73.7,
+        "avg_tcp_time": 15.02,
+        "avg_transfer_time": 531.37,
+        "peak_hour": "19:20",
+        "slowest_response": 1323.73,
+        "fastest_response": 188.68
+      },
+      "last_check": "2026-03-17T19:20:02.448478+00:00",
+      "engagement": {}
+    },
+    "rockstar_newswire": {
+      "current_status": "ONLINE",
+      "sla_24h": 100.0,
+      "sla_7d": 100.0,
+      "sla_30d": 100.0,
+      "performance": {
+        "avg_latency": 367.2,
+        "avg_dns_time": 0.48,
+        "avg_tcp_time": 15.22,
+        "avg_transfer_time": 351.51,
+        "peak_hour": "19:20",
+        "slowest_response": 894.86,
+        "fastest_response": 74.18
+      },
+      "last_check": "2026-03-17T19:20:03.919608+00:00",
+      "engagement": {}
+    },
+    "playstation_store": {
+      "current_status": "ERROR",
+      "sla_24h": 66.67,
+      "sla_7d": 66.67,
+      "sla_30d": 66.67,
+      "performance": {
+        "avg_latency": 248.06,
+        "avg_dns_time": 77.09,
+        "avg_tcp_time": 6.13,
+        "avg_transfer_time": 164.84,
+        "peak_hour": "17:58",
+        "slowest_response": 300.41,
+        "fastest_response": 195.72
+      },
+      "last_check": "2026-03-17T19:20:04.855572+00:00",
+      "engagement": {}
+    },
+    "xbox_store": {
+      "current_status": "ERROR",
+      "sla_24h": 66.67,
+      "sla_7d": 66.67,
+      "sla_30d": 66.67,
+      "performance": {
+        "avg_latency": 701.35,
+        "avg_dns_time": 108.31,
+        "avg_tcp_time": 6.21,
+        "avg_transfer_time": 586.83,
+        "peak_hour": "17:07",
+        "slowest_response": 788.87,
+        "fastest_response": 613.83
+      },
+      "last_check": "2026-03-17T19:20:06.301600+00:00",
+      "engagement": {}
+    }
+  },
+  "incident_log": [
+    {
+      "service": "xbox_store",
+      "start_time": "2026-03-17T19:20:06.301600+00:00",
+      "end_time": null,
+      "status": "ERROR",
+      "duration": "Em andamento"
+    },
+    {
+      "service": "playstation_store",
+      "start_time": "2026-03-17T19:20:04.855572+00:00",
+      "end_time": null,
+      "status": "ERROR",
+      "duration": "Em andamento"
+    }
+  ],
+  "badge": {
+    "schemaVersion": 1,
+    "label": "Uptime",
+    "message": "100.0%",
+    "color": "brightgreen"
+  },
+  "history": {
     "gta_vi_official": [
       {
         "timestamp": "2026-03-17T17:07:10.453516+00:00",
@@ -31,7 +123,7 @@
         "num_scripts": 115,
         "num_stylesheets": 40,
         "page_title": "Grand Theft Auto VI - Rockstar Games",
-        "meta_description": "Vice City, USA. Jason and Lucia have always known the deck is stacked against them. But when an easy score goes wrong, they find themselves on the darkest side of the sunniest place in America, in the middle of a criminal conspiracy stretching across the state of Leonida \u2014 forced to rely on each other more than ever if they want to make it out alive."
+        "meta_description": "Vice City, USA. Jason and Lucia have always known the deck is stacked against them. But when an easy score goes wrong, they find themselves on the darkest side of the sunniest place in America, in the middle of a criminal conspiracy stretching across the state of Leonida — forced to rely on each other more than ever if they want to make it out alive."
       },
       {
         "timestamp": "2026-03-17T17:58:55.080172+00:00",
@@ -63,7 +155,7 @@
         "num_scripts": 113,
         "num_stylesheets": 40,
         "page_title": "Grand Theft Auto VI - Rockstar Games",
-        "meta_description": "Vice City, USA. Jason and Lucia have always known the deck is stacked against them. But when an easy score goes wrong, they find themselves on the darkest side of the sunniest place in America, in the middle of a criminal conspiracy stretching across the state of Leonida \u2014 forced to rely on each other more than ever if they want to make it out alive."
+        "meta_description": "Vice City, USA. Jason and Lucia have always known the deck is stacked against them. But when an easy score goes wrong, they find themselves on the darkest side of the sunniest place in America, in the middle of a criminal conspiracy stretching across the state of Leonida — forced to rely on each other more than ever if they want to make it out alive."
       },
       {
         "timestamp": "2026-03-17T19:20:02.448478+00:00",
@@ -95,7 +187,7 @@
         "num_scripts": 113,
         "num_stylesheets": 40,
         "page_title": "Grand Theft Auto VI - Rockstar Games",
-        "meta_description": "Vice City, USA. Jason and Lucia have always known the deck is stacked against them. But when an easy score goes wrong, they find themselves on the darkest side of the sunniest place in America, in the middle of a criminal conspiracy stretching across the state of Leonida \u2014 forced to rely on each other more than ever if they want to make it out alive."
+        "meta_description": "Vice City, USA. Jason and Lucia have always known the deck is stacked against them. But when an easy score goes wrong, they find themselves on the darkest side of the sunniest place in America, in the middle of a criminal conspiracy stretching across the state of Leonida — forced to rely on each other more than ever if they want to make it out alive."
       }
     ],
     "rockstar_newswire": [
@@ -362,6 +454,38 @@
       }
     ]
   },
-  "created_at": "2026-03-17T17:07:10.453501+00:00",
-  "page_size_history": []
+  "page_size_history": [],
+  "generated_at": "2026-03-17T19:20:09.275285+00:00",
+  "summary": {
+    "run_duration_seconds": 6.83,
+    "incidents_last_24h": {
+      "gta_vi_official": 0,
+      "rockstar_newswire": 0,
+      "playstation_store": 1,
+      "xbox_store": 1
+    },
+    "avg_latency_last_24h": {
+      "gta_vi_official": 620,
+      "rockstar_newswire": 367,
+      "playstation_store": 248,
+      "xbox_store": 701
+    },
+    "intelligence_updates": [
+      {
+        "service": "gta_vi_official",
+        "count": 1,
+        "latest": "2026-03-17T17:58:55.080172+00:00"
+      },
+      {
+        "service": "rockstar_newswire",
+        "count": 1,
+        "latest": "2026-03-17T17:58:55.360530+00:00"
+      },
+      {
+        "service": "xbox_store",
+        "count": 1,
+        "latest": "2026-03-17T17:58:55.878204+00:00"
+      }
+    ]
+  }
 }
