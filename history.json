@@ -1,20 +1,134 @@
-﻿{
-    "created_at":  "2026-03-16T00:00:00+00:00",
-    "page_size_history":  [
-
-                          ],
-    "services":  {
-                     "xbox_store":  [
-
-                                    ],
-                     "rockstar_newswire":  [
-
-                                           ],
-                     "gta_vi_official":  [
-
-                                         ],
-                     "playstation_store":  [
-
-                                           ]
-                 }
+{
+  "services": {
+    "gta_vi_official": [
+      {
+        "timestamp": "2026-03-17T00:10:49.638195+00:00",
+        "url": "https://www.rockstargames.com/VI/",
+        "status": "ERROR",
+        "http_code": 0,
+        "total_time_ms": 0,
+        "dns_time_ms": 0,
+        "tcp_time_ms": 0,
+        "transfer_time_ms": 0,
+        "content_ok": false,
+        "found_keywords": [],
+        "security_headers": {},
+        "error": "HTTPSConnectionPool(host='www.rockstargames.com', port=443): Max retries exceeded with url: /VI/ (Caused by SSLError(SSLCertVerificationError(1, '[SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed: self-signed certificate in certificate chain (_ssl.c:1018)')))",
+        "engagement": {}
+      },
+      {
+        "timestamp": "2026-03-17T00:11:42.572429+00:00",
+        "url": "https://www.rockstargames.com/VI/",
+        "status": "ERROR",
+        "http_code": 0,
+        "total_time_ms": 0,
+        "dns_time_ms": 0,
+        "tcp_time_ms": 0,
+        "transfer_time_ms": 0,
+        "content_ok": false,
+        "found_keywords": [],
+        "security_headers": {},
+        "error": "HTTPSConnectionPool(host='www.rockstargames.com', port=443): Max retries exceeded with url: /VI/ (Caused by SSLError(SSLCertVerificationError(1, '[SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed: self-signed certificate in certificate chain (_ssl.c:1018)')))",
+        "engagement": {}
+      }
+    ],
+    "rockstar_newswire": [
+      {
+        "timestamp": "2026-03-17T00:10:55.137529+00:00",
+        "url": "https://www.rockstargames.com/br/newswire",
+        "status": "ERROR",
+        "http_code": 0,
+        "total_time_ms": 0,
+        "dns_time_ms": 0,
+        "tcp_time_ms": 0,
+        "transfer_time_ms": 0,
+        "content_ok": false,
+        "found_keywords": [],
+        "security_headers": {},
+        "error": "HTTPSConnectionPool(host='www.rockstargames.com', port=443): Max retries exceeded with url: /br/newswire (Caused by SSLError(SSLCertVerificationError(1, '[SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed: self-signed certificate in certificate chain (_ssl.c:1018)')))",
+        "engagement": {}
+      },
+      {
+        "timestamp": "2026-03-17T00:11:48.337159+00:00",
+        "url": "https://www.rockstargames.com/br/newswire",
+        "status": "ERROR",
+        "http_code": 0,
+        "total_time_ms": 0,
+        "dns_time_ms": 0,
+        "tcp_time_ms": 0,
+        "transfer_time_ms": 0,
+        "content_ok": false,
+        "found_keywords": [],
+        "security_headers": {},
+        "error": "HTTPSConnectionPool(host='www.rockstargames.com', port=443): Max retries exceeded with url: /br/newswire (Caused by SSLError(SSLCertVerificationError(1, '[SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed: self-signed certificate in certificate chain (_ssl.c:1018)')))",
+        "engagement": {}
+      }
+    ],
+    "playstation_store": [
+      {
+        "timestamp": "2026-03-17T00:10:59.932287+00:00",
+        "url": "https://www.playstation.com/pt-br/games/grand-theft-auto-vi/",
+        "status": "ERROR",
+        "http_code": 0,
+        "total_time_ms": 0,
+        "dns_time_ms": 0,
+        "tcp_time_ms": 0,
+        "transfer_time_ms": 0,
+        "content_ok": false,
+        "found_keywords": [],
+        "security_headers": {},
+        "error": "HTTPSConnectionPool(host='www.playstation.com', port=443): Max retries exceeded with url: /pt-br/games/grand-theft-auto-vi/ (Caused by SSLError(SSLCertVerificationError(1, '[SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed: self-signed certificate in certificate chain (_ssl.c:1018)')))",
+        "engagement": {}
+      },
+      {
+        "timestamp": "2026-03-17T00:11:53.419663+00:00",
+        "url": "https://www.playstation.com/pt-br/games/grand-theft-auto-vi/",
+        "status": "ERROR",
+        "http_code": 0,
+        "total_time_ms": 0,
+        "dns_time_ms": 0,
+        "tcp_time_ms": 0,
+        "transfer_time_ms": 0,
+        "content_ok": false,
+        "found_keywords": [],
+        "security_headers": {},
+        "error": "HTTPSConnectionPool(host='www.playstation.com', port=443): Max retries exceeded with url: /pt-br/games/grand-theft-auto-vi/ (Caused by SSLError(SSLCertVerificationError(1, '[SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed: self-signed certificate in certificate chain (_ssl.c:1018)')))",
+        "engagement": {}
+      }
+    ],
+    "xbox_store": [
+      {
+        "timestamp": "2026-03-17T00:11:05.489177+00:00",
+        "url": "https://www.xbox.com/pt-PT/games/store/grand-theft-auto-vi/9NL3WWNZLZZN",
+        "status": "ERROR",
+        "http_code": 0,
+        "total_time_ms": 0,
+        "dns_time_ms": 0,
+        "tcp_time_ms": 0,
+        "transfer_time_ms": 0,
+        "content_ok": false,
+        "found_keywords": [],
+        "security_headers": {},
+        "error": "name 'history' is not defined",
+        "engagement": {}
+      },
+      {
+        "timestamp": "2026-03-17T00:11:58.362995+00:00",
+        "url": "https://www.xbox.com/pt-PT/games/store/grand-theft-auto-vi/9NL3WWNZLZZN",
+        "status": "ERROR",
+        "http_code": 0,
+        "total_time_ms": 0,
+        "dns_time_ms": 0,
+        "tcp_time_ms": 0,
+        "transfer_time_ms": 0,
+        "content_ok": false,
+        "found_keywords": [],
+        "security_headers": {},
+        "error": "name 'history' is not defined",
+        "engagement": {}
+      }
+    ]
+  },
+  "created_at": "2026-03-17T00:10:49.638170+00:00",
+  "page_size_history": []
 }
