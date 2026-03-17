@@ -409,6 +409,7 @@
             <div class="status-overview">
                 <span class="badge online" id="global-status">SYSTEM OPERATIONAL</span>
                 <span class="badge" id="last-update-badge">Atualizando...</span>
+                <a href="blog.html" class="btn btn-primary" style="margin-left: 1rem;">Intelligence Blog →</a>
             </div>
         </div>
     </header>
@@ -884,14 +885,12 @@
 
     <!-- Footer -->
     <footer class="footer-container" style="text-align: center; padding: 20px; margin-top: 40px; border-top: 1px solid #333;">
-        <p>© 2026 Patrick Araujo • 
-           <span class="github-dev-badge" style="background: #238636; color: white; padding: 2px 8px; border-radius: 12px; font-size: 0.8em;">Member of <b>GitHub Developer Program</b></span>
+        <p>© 2026 <a href="https://github.com/PkLavc" target="_blank" style="color: #58a6ff; text-decoration: none; font-weight: 600;">PkLavc</a> • 
+           <a href="https://github.com/PkLavc/project-vice-monitor" target="_blank" style="color: #58a6ff; text-decoration: none;">Source Code</a>
+           <a href="https://github.com/sponsors/PkLavc" target="_blank" style="background: linear-gradient(135deg, #38bdf8, #a78bfa); color: white; padding: 0.25rem 1rem; border-radius: 999px; font-weight: 700; text-decoration: none; border: 2px solid rgba(255,255,255,0.3); box-shadow: 0 4px 15px rgba(56, 189, 248, 0.3); transition: all 0.3s ease; text-transform: uppercase; letter-spacing: 1px; font-size: 0.85rem; margin-left: 0.5rem;">
+                <span style="margin-right: 0.25rem;">💖</span> Sponsor Me
+            </a>
         </p>
-        <p>
-            <a href="https://github.com/PkLavc" target="_blank" style="color: #58a6ff; text-decoration: none;">GitHub Profile</a> • 
-            <a href="https://github.com/PkLavc/project-vice-monitor" target="_blank" style="color: #58a6ff; text-decoration: none;">Source Code (Project Vice Monitor)</a>
-        </p>
-        <p style="font-size: 0.85em; color: #8b949e;">🚀 Automated observability system with integrated CI/CD | SRE Driven</p>
     </footer>
 
     
@@ -1599,8 +1598,7 @@
     </script>
     
 
-    <!-- INICIO_DADOS_INJECAO -->
-    <!-- Observability data loaded from external JSON file -->
+    <!-- Load data from external JSON file -->
     <script>
         // Load data from external JSON file
         async function loadDashboardData() {
@@ -1614,7 +1612,7 @@
                 updateDashboard();
             } catch (error) {
                 console.error('Erro ao carregar dados do arquivo JSON:', error);
-                // Fallback to inline data if file loading fails
+                // Fallback to empty data if file loading fails
                 window.dashboardData = {
                     services: {},
                     incident_log: [],
@@ -1639,243 +1637,5 @@
             setInterval(loadDashboardData, 60000);
         });
     </script>
-    <!-- FIM_DADOS_INJECAO -->
-
-<script id="dashboard-data">window.dashboardData = {
-  "services": {
-    "gta_vi_official": {
-      "current_status": "ONLINE",
-      "sla_24h": 100.0,
-      "sla_7d": 100.0,
-      "sla_30d": 100.0,
-      "performance": {
-        "avg_latency": 488.09,
-        "avg_dns_time": 164.19,
-        "avg_tcp_time": 9.37,
-        "avg_transfer_time": 314.53,
-        "peak_hour": "20:40",
-        "slowest_response": 488.09,
-        "fastest_response": 488.09
-      },
-      "last_check": "2026-03-17T20:40:20.492339+00:00",
-      "engagement": {}
-    },
-    "rockstar_newswire": {
-      "current_status": "ONLINE",
-      "sla_24h": 100.0,
-      "sla_7d": 100.0,
-      "sla_30d": 100.0,
-      "performance": {
-        "avg_latency": 116.35,
-        "avg_dns_time": 0.5,
-        "avg_tcp_time": 9.39,
-        "avg_transfer_time": 106.46,
-        "peak_hour": "20:40",
-        "slowest_response": 116.35,
-        "fastest_response": 116.35
-      },
-      "last_check": "2026-03-17T20:40:21.167669+00:00",
-      "engagement": {}
-    },
-    "playstation_store": {
-      "current_status": "ONLINE",
-      "sla_24h": 100.0,
-      "sla_7d": 100.0,
-      "sla_30d": 100.0,
-      "performance": {
-        "avg_latency": 1337.7,
-        "avg_dns_time": 176.35,
-        "avg_tcp_time": 9.37,
-        "avg_transfer_time": 1151.98,
-        "peak_hour": "20:40",
-        "slowest_response": 1337.7,
-        "fastest_response": 1337.7
-      },
-      "last_check": "2026-03-17T20:40:21.295243+00:00",
-      "engagement": {}
-    },
-    "xbox_store": {
-      "current_status": "ONLINE",
-      "sla_24h": 100.0,
-      "sla_7d": 100.0,
-      "sla_30d": 100.0,
-      "performance": {
-        "avg_latency": 858.96,
-        "avg_dns_time": 11.16,
-        "avg_tcp_time": 9.18,
-        "avg_transfer_time": 838.62,
-        "peak_hour": "20:40",
-        "slowest_response": 858.96,
-        "fastest_response": 858.96
-      },
-      "last_check": "2026-03-17T20:40:22.822731+00:00",
-      "engagement": {}
-    }
-  },
-  "incident_log": [],
-  "badge": {
-    "schemaVersion": 1,
-    "label": "Uptime",
-    "message": "100.0%",
-    "color": "brightgreen"
-  },
-  "history": {
-    "gta_vi_official": [
-      {
-        "timestamp": "2026-03-17T20:40:20.492339+00:00",
-        "url": "https://www.rockstargames.com/VI/",
-        "status": "ONLINE",
-        "http_code": 200,
-        "total_time_ms": 488.09,
-        "dns_time_ms": 164.19,
-        "tcp_time_ms": 9.37,
-        "transfer_time_ms": 314.53,
-        "content_ok": true,
-        "found_keywords": [
-          "Grand Theft Auto",
-          "Rockstar"
-        ],
-        "security_headers": {
-          "strict-transport-security": true,
-          "x-content-type-options": false,
-          "content-security-policy": false,
-          "x-frame-options": false,
-          "referrer-policy": false
-        },
-        "engagement": {},
-        "content_hash": "3923514bab8310f4f14fba091569dd22f82738dd50cace15605c42bf8634ce6d",
-        "intelligence_update": false,
-        "html_size_kb": 576.92,
-        "num_images": 52,
-        "num_links": 9,
-        "num_scripts": 113,
-        "num_stylesheets": 40,
-        "page_title": "Grand Theft Auto VI - Rockstar Games",
-        "meta_description": "Vice City, USA. Jason and Lucia have always known the deck is stacked against them. But when an easy score goes wrong, they find themselves on the darkest side of the sunniest place in America, in the middle of a criminal conspiracy stretching across the state of Leonida — forced to rely on each other more than ever if they want to make it out alive."
-      }
-    ],
-    "rockstar_newswire": [
-      {
-        "timestamp": "2026-03-17T20:40:21.167669+00:00",
-        "url": "https://www.rockstargames.com/newswire",
-        "status": "ONLINE",
-        "http_code": 200,
-        "total_time_ms": 116.35,
-        "dns_time_ms": 0.5,
-        "tcp_time_ms": 9.39,
-        "transfer_time_ms": 106.46,
-        "content_ok": true,
-        "found_keywords": [
-          "Rockstar",
-          "News",
-          "GTA"
-        ],
-        "security_headers": {
-          "strict-transport-security": true,
-          "x-content-type-options": false,
-          "content-security-policy": false,
-          "x-frame-options": false,
-          "referrer-policy": true
-        },
-        "engagement": {},
-        "content_hash": "94cf9c983e6a4a0ab4bbc230ebeb1c7cfc9b5f41a9001d704b87c4057605d2be",
-        "intelligence_update": false,
-        "html_size_kb": 5.23,
-        "num_images": 0,
-        "num_links": 0,
-        "num_scripts": 4,
-        "num_stylesheets": 0,
-        "page_title": "Newswire - Rockstar Games",
-        "meta_description": "The official destination for Rockstar game announcements and updates, trailer launches, screenshot unveilings, events, soundtrack details, community creations and a lot more."
-      }
-    ],
-    "playstation_store": [
-      {
-        "timestamp": "2026-03-17T20:40:21.295243+00:00",
-        "url": "https://www.playstation.com/en-us/games/grand-theft-auto-vi/",
-        "status": "ONLINE",
-        "http_code": 200,
-        "total_time_ms": 1337.7,
-        "dns_time_ms": 176.35,
-        "tcp_time_ms": 9.37,
-        "transfer_time_ms": 1151.98,
-        "content_ok": true,
-        "found_keywords": [
-          "Grand Theft Auto",
-          "PlayStation"
-        ],
-        "security_headers": {
-          "strict-transport-security": true,
-          "x-content-type-options": true,
-          "content-security-policy": false,
-          "x-frame-options": true,
-          "referrer-policy": true
-        },
-        "engagement": {},
-        "content_hash": "084995979899eb7acda68f3b82fc559a82190ae0d37c0c28513900e228cf573a",
-        "intelligence_update": false,
-        "html_size_kb": 202.07,
-        "num_images": 23,
-        "num_links": 80,
-        "num_scripts": 35,
-        "num_stylesheets": 6,
-        "page_title": "Grand Theft Auto VI - PS5 Games | PlayStation (US)",
-        "meta_description": "Add Grand Theft Auto VI to your Wishlist at PlayStation Store now. Experience the biggest, most immersive evolution of the Grand Theft Auto series yet."
-      }
-    ],
-    "xbox_store": [
-      {
-        "timestamp": "2026-03-17T20:40:22.822731+00:00",
-        "url": "https://www.xbox.com/en-US/games/store/grand-theft-auto-vi/9NL3WWNZLZZN",
-        "status": "ONLINE",
-        "http_code": 200,
-        "total_time_ms": 858.96,
-        "dns_time_ms": 11.16,
-        "tcp_time_ms": 9.18,
-        "transfer_time_ms": 838.62,
-        "content_ok": true,
-        "found_keywords": [
-          "Grand Theft Auto",
-          "Xbox"
-        ],
-        "security_headers": {
-          "strict-transport-security": true,
-          "x-content-type-options": true,
-          "content-security-policy": false,
-          "x-frame-options": true,
-          "referrer-policy": false
-        },
-        "engagement": {},
-        "content_hash": "7024c302930c02b19410274996dba517f03a0b85093c09e5ea781015770506af",
-        "intelligence_update": false,
-        "html_size_kb": 378.03,
-        "num_images": 5,
-        "num_links": 155,
-        "num_scripts": 21,
-        "num_stylesheets": 6,
-        "page_title": "Your Privacy Choices Opt-Out Icon",
-        "meta_description": null
-      }
-    ]
-  },
-  "page_size_history": [],
-  "generated_at": "2026-03-17T20:40:23.710271+00:00",
-  "summary": {
-    "run_duration_seconds": 3.22,
-    "incidents_last_24h": {
-      "gta_vi_official": 0,
-      "rockstar_newswire": 0,
-      "playstation_store": 0,
-      "xbox_store": 0
-    },
-    "avg_latency_last_24h": {
-      "gta_vi_official": 488,
-      "rockstar_newswire": 116,
-      "playstation_store": 1337,
-      "xbox_store": 858
-    },
-    "intelligence_updates": []
-  }
-};</script>
 </body>
 </html>

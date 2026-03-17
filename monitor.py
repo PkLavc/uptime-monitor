@@ -119,8 +119,13 @@ def measure_tcp_connection(url):
 def deep_health_check(url, response, keywords):
     """Check if HTML content contains specified keywords"""
     try:
-        # Handle encoding issues
-        content = response.text
+        # Handle encoding issues more robustly
+        try:
+            content = response.text
+        except UnicodeDecodeError:
+            # Fallback to encoding-safe content extraction
+            content = response.content.decode('utf-8', errors='ignore')
+        
         if content:
             content = content.lower()
         else:
@@ -183,20 +188,20 @@ def generate_blog_entry(record, service_config):
         
         # Generate filename with timestamp
         timestamp = datetime.datetime.fromisoformat(record["timestamp"])
-        filename = f"update-{timestamp.strftime('%Y-%m-%d-%H')}.md"
+        filename = f"update-{timestamp.strftime('%Y-%m-%d-%H-%M')}.md"
         filepath = os.path.join(blog_dir, filename)
         
         # Determine security status
         security_status = "SECURE" if record.get("status") == "INTELLIGENCE_UPDATE" else "WARNING"
         
         # Generate blog content
-        blog_content = f"""# Intelligence Update - {timestamp.strftime('%B %d, %Y at %H:%M UTC')}
-
-**Date:** {timestamp.strftime('%Y-%m-%d %H:%M:%S UTC')}
-**URL Monitored:** {service_config['url']}
-**Service:** {service_config['name']}
-**Hash SHA-256:** `{record.get('content_hash', 'N/A')}`
-**Security Status:** {security_status}
+        blog_content = f"""---
+title: "Intelligence Update - {timestamp.strftime('%B %d, %Y at %H:%M UTC')}"
+date: {timestamp.strftime('%Y-%m-%d %H:%M:%S UTC')}
+service: {service_config['name']}
+url: {service_config['url']}
+status: {security_status}
+---
 
 ## Summary
 
@@ -864,7 +869,7 @@ def main():
                 })
 
             perf = calculate_performance_metrics(records, time_filters["last_24h"])
-            summary["avg_latency_last_24h"][service_key] = int(perf.get("avg_latency", 0)) if perf and perf.get("avg_latency", 0) else 0
+            summary["avg_latency_last_24h"][service_key] = int(perf.get("avg_latency", 0)) if perf and perf.get("avg_latency") is not None else 0
         except Exception as e:
             print(f"WARNING: Failed to process data for {service_key}: {e}")
             summary["incidents_last_24h"][service_key] = 0

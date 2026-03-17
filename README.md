@@ -263,6 +263,8 @@ Patrick Araujo | Software Engineer
 - GitHub: [PkLavc](https://github.com/PkLavc)
 - Repository: [uptime-monitor](https://github.com/PkLavc/uptime-monitor)
 
+[![GitHub Sponsors](https://img.shields.io/badge/Sponsor%20me-%23ea4aaa?style=for-the-badge&logo=github-sponsors&logoColor=white)](https://github.com/sponsors/PkLavc)
+
 ## Version History
 
 ### Current Version Features
