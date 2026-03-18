@@ -362,9 +362,7 @@
         </div>
 
         <div class="blog-grid" id="blog-posts">
-            <div class="loading">
-                <div class="loading">Loading intelligence updates...</div>
-            </div>
+            <!-- Blog entries will be loaded here -->
         </div>
     </main>
 
@@ -432,7 +430,7 @@
                     return;
                 }
                 
-                // Generate blog posts
+                        // Generate blog posts
                 intelligenceUpdates.forEach(update => {
                     const timestamp = new Date(update.timestamp);
                     const formattedDate = timestamp.toLocaleString('en-US', {
