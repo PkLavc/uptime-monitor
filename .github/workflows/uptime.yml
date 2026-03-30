@@ -81,7 +81,8 @@ jobs:
           
           git fetch origin main
           git checkout -b $NEW_BRANCH origin/main
-          
+
+          git reset --hard
           git add .
           
           MESSAGES=("docs: update monitoring logs" "feat: refresh dashboard data" "chore: sync system metrics" "fix: update uptime status")
