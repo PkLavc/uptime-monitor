@@ -17,14 +17,24 @@ jobs:
 
       - name: Config Git
         run: |
-          git config --global user.name "github-actions[bot]"
-          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git config --global user.name "PkLavc"
+          git config --global user.email "patrickajm@gmail.com"
+
+      - name: Random Start Delay
+        run: |
+          DELAY=$(( ( RANDOM % 903 ) + 2700 ))
+          sleep $DELAY
 
       - name: Run Check
         run: |
           git reset --hard HEAD
           python monitor.py
         
+      - name: Random Commit Delay
+        run: |
+          DELAY=$(( ( RANDOM % 120 ) + 300 ))
+          sleep $DELAY
+
       - name: Auto PR and Merge
         env:
           GH_TOKEN: ${{ secrets.PAT_SHARK }}
@@ -33,4 +43,5 @@ jobs:
           git stash || true
           git pull --rebase origin main -X ours
           git stash pop || true
+          
           bash workflow.sh
