@@ -2048,6 +2048,38 @@
         "num_stylesheets": 40,
         "page_title": "Grand Theft Auto VI - Rockstar Games",
         "meta_description": "Vice City, USA. Jason and Lucia have always known the deck is stacked against them. But when an easy score goes wrong, they find themselves on the darkest side of the sunniest place in America, in the middle of a criminal conspiracy stretching across the state of Leonida \u2014 forced to rely on each other more than ever if they want to make it out alive."
+      },
+      {
+        "timestamp": "2026-05-16T21:19:21.083804+00:00",
+        "url": "https://www.rockstargames.com/VI/",
+        "status": "ONLINE",
+        "http_code": 200,
+        "total_time_ms": 93.2,
+        "dns_time_ms": 14.71,
+        "tcp_time_ms": 4.55,
+        "transfer_time_ms": 73.94,
+        "content_ok": true,
+        "found_keywords": [
+          "Grand Theft Auto",
+          "Rockstar"
+        ],
+        "security_headers": {
+          "strict-transport-security": true,
+          "x-content-type-options": false,
+          "content-security-policy": false,
+          "x-frame-options": false,
+          "referrer-policy": false
+        },
+        "engagement": {},
+        "content_hash": "0e9c5871f7b9344ceb135fb3951c0f35a0bb4fdefa18705f02dca0671c6fd78a",
+        "intelligence_update": false,
+        "html_size_kb": 576.88,
+        "num_images": 52,
+        "num_links": 9,
+        "num_scripts": 113,
+        "num_stylesheets": 40,
+        "page_title": "Grand Theft Auto VI - Rockstar Games",
+        "meta_description": "Vice City, USA. Jason and Lucia have always known the deck is stacked against them. But when an easy score goes wrong, they find themselves on the darkest side of the sunniest place in America, in the middle of a criminal conspiracy stretching across the state of Leonida \u2014 forced to rely on each other more than ever if they want to make it out alive."
       }
     ],
     "rockstar_newswire": [
@@ -4162,6 +4194,39 @@
         "num_stylesheets": 0,
         "page_title": "Newswire - Rockstar Games",
         "meta_description": "The official destination for Rockstar game announcements and updates, trailer launches, screenshot unveilings, events, soundtrack details, community creations and a lot more."
+      },
+      {
+        "timestamp": "2026-05-16T21:19:21.217461+00:00",
+        "url": "https://www.rockstargames.com/newswire",
+        "status": "ONLINE",
+        "http_code": 200,
+        "total_time_ms": 44.46,
+        "dns_time_ms": 0.38,
+        "tcp_time_ms": 2.42,
+        "transfer_time_ms": 41.66,
+        "content_ok": true,
+        "found_keywords": [
+          "Rockstar",
+          "News",
+          "GTA"
+        ],
+        "security_headers": {
+          "strict-transport-security": true,
+          "x-content-type-options": false,
+          "content-security-policy": false,
+          "x-frame-options": false,
+          "referrer-policy": true
+        },
+        "engagement": {},
+        "content_hash": "94cf9c983e6a4a0ab4bbc230ebeb1c7cfc9b5f41a9001d704b87c4057605d2be",
+        "intelligence_update": false,
+        "html_size_kb": 5.23,
+        "num_images": 0,
+        "num_links": 0,
+        "num_scripts": 4,
+        "num_stylesheets": 0,
+        "page_title": "Newswire - Rockstar Games",
+        "meta_description": "The official destination for Rockstar game announcements and updates, trailer launches, screenshot unveilings, events, soundtrack details, community creations and a lot more."
       }
     ],
     "playstation_store": [
@@ -6212,6 +6277,38 @@
         "num_stylesheets": 6,
         "page_title": "Grand Theft Auto VI - PS5 Games | PlayStation (US)",
         "meta_description": "Add Grand Theft Auto VI to your Wishlist at PlayStation Store now. Experience the biggest, most immersive evolution of the Grand Theft Auto series yet."
+      },
+      {
+        "timestamp": "2026-05-16T21:19:21.273290+00:00",
+        "url": "https://www.playstation.com/en-us/games/grand-theft-auto-vi/",
+        "status": "INTELLIGENCE_UPDATE",
+        "http_code": 200,
+        "total_time_ms": 492.91,
+        "dns_time_ms": 5.32,
+        "tcp_time_ms": 2.6,
+        "transfer_time_ms": 484.99,
+        "content_ok": true,
+        "found_keywords": [
+          "Grand Theft Auto",
+          "PlayStation"
+        ],
+        "security_headers": {
+          "strict-transport-security": true,
+          "x-content-type-options": true,
+          "content-security-policy": false,
+          "x-frame-options": true,
+          "referrer-policy": true
+        },
+        "engagement": {},
+        "content_hash": "6b27a9982e9ffe6c8d2961b3ced49ea69b95b115614b14a7d223b891fc4d25fb",
+        "intelligence_update": true,
+        "html_size_kb": 201.67,
+        "num_images": 23,
+        "num_links": 80,
+        "num_scripts": 36,
+        "num_stylesheets": 6,
+        "page_title": "Grand Theft Auto VI - PS5 Games | PlayStation (US)",
+        "meta_description": "Add Grand Theft Auto VI to your Wishlist at PlayStation Store now. Experience the biggest, most immersive evolution of the Grand Theft Auto series yet."
       }
     ],
     "xbox_store": [
@@ -8254,6 +8351,38 @@
         },
         "engagement": {},
         "content_hash": "1590b63e841b62aaf37a5d560fdf65ae37fb76204d2d7fedaf841fc8ac25bb01",
+        "intelligence_update": true,
+        "html_size_kb": 356.25,
+        "num_images": 5,
+        "num_links": 153,
+        "num_scripts": 21,
+        "num_stylesheets": 6,
+        "page_title": "Your Privacy Choices Opt-Out Icon",
+        "meta_description": null
+      },
+      {
+        "timestamp": "2026-05-16T21:19:21.789249+00:00",
+        "url": "https://www.xbox.com/en-US/games/store/grand-theft-auto-vi/9NL3WWNZLZZN",
+        "status": "INTELLIGENCE_UPDATE",
+        "http_code": 200,
+        "total_time_ms": 431.04,
+        "dns_time_ms": 37.47,
+        "tcp_time_ms": 5.46,
+        "transfer_time_ms": 388.11,
+        "content_ok": true,
+        "found_keywords": [
+          "Grand Theft Auto",
+          "Xbox"
+        ],
+        "security_headers": {
+          "strict-transport-security": true,
+          "x-content-type-options": true,
+          "content-security-policy": false,
+          "x-frame-options": true,
+          "referrer-policy": false
+        },
+        "engagement": {},
+        "content_hash": "e155f0385fe0d85bfebc70b4db3493b2cab65d108b1946cb17682fa4802bb007",
         "intelligence_update": true,
         "html_size_kb": 356.25,
         "num_images": 5,
